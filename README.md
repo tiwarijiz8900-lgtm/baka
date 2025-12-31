@@ -31,7 +31,7 @@
 <p align="center"> ​⚙️ ─「 𝐃𝐄𝐏𝐋𝐎𝐘 」─
 ​<h3 align="center">🚀 Deploy On Heroku</h3>
 ​<p align="center">
-<a href="https://dashboard.heroku.com/new?template=https://github.com/DevixOP/RyanBakaBot">
+<a href="https://dashboard.heroku.com/new?template=https://github.com/tiwarijiz8900-lgtm/baka">
 <img src="https://img.shields.io/badge/⚡%20Deploy%20To%20Heroku-purple?style=for-the-badge&logo=heroku" width="250">
 </a>
 </p>
@@ -101,7 +101,7 @@ pip install -r requirements.txt
 python3 Ryan.py
 ```
 <h3 align="center">
-Made with ❤️ by <a href="https://t.me/WTF_Phantom">𝐑𝐲𝐚𝐧</a>
+Made with ❤️ by <a href="https://t.me/ll_WTF_SHEZADA_ll">𝐒𝐇𝐄𝐇𝐙𝐀𝐃𝐀</a>
 
 Owner of <b>ShreyaBots</b>
 </h3>
