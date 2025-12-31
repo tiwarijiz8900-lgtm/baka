@@ -42,7 +42,7 @@ WELCOME_IMG_URL = os.getenv("WELCOME_IMG_URL", "https://files.catbox.moe/gyi5iu.
 
 SUPPORT_GROUP = os.getenv("SUPPORT_GROUP", "https://t.me/ShreyaBotSupport")
 SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "https://t.me/ShreyaBots")
-OWNER_LINK = os.getenv("OWNER_LINK", "https://t.me/WTF_Phantom")
+OWNER_LINK = os.getenv("OWNER_LINK", "https://t.me/ll_WTF_SHEZADA_ll")
 
 # IDs
 try: LOGGER_ID = int(os.getenv("LOGGER_ID", "0").strip())
