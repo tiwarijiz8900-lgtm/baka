@@ -32,27 +32,27 @@ MISTRAL_API_KEY = os.getenv("MISTRAL_API_KEY", "")
 PORT = int(os.environ.get("PORT", 5000))
 
 # Updater Config
-UPSTREAM_REPO = os.getenv("UPSTREAM_REPO", "")
+UPSTREAM_REPO = os.getenv("UPSTREAM_REPO", "https://github.com/tiwarijiz8900-lgtm/baka")
 GIT_TOKEN = os.getenv("GIT_TOKEN", "")
 
 # Images & Links
-START_IMG_URL = os.getenv("START_IMG_URL", "https://telegra.ph/file/5e5480760e412bd402e88.jpg") 
-HELP_IMG_URL = os.getenv("HELP_IMG_URL", "https://files.catbox.moe/5g37fy.jpg") 
-WELCOME_IMG_URL = os.getenv("WELCOME_IMG_URL", "https://files.catbox.moe/gyi5iu.jpg") 
+START_IMG_URL = os.getenv("START_IMG_URL", "https://files.catbox.moe/wvsxti.jpg") 
+HELP_IMG_URL = os.getenv("HELP_IMG_URL", "https://files.catbox.moe/3r4ihh.jpg") 
+WELCOME_IMG_URL = os.getenv("WELCOME_IMG_URL", "https://files.catbox.moe/3r4ihh.jpg") 
 
 SUPPORT_GROUP = os.getenv("SUPPORT_GROUP", "https://t.me/ShreyaBotSupport")
 SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "https://t.me/ShreyaBots")
 OWNER_LINK = os.getenv("OWNER_LINK", "https://t.me/ll_WTF_SHEZADA_ll")
 
 # IDs
-try: LOGGER_ID = int(os.getenv("LOGGER_ID", "0").strip())
+try: LOGGER_ID = int(os.getenv("LOGGER_ID", "1003605595874").strip())
 except: LOGGER_ID = 0
 try: OWNER_ID = int(os.getenv("OWNER_ID", "0").strip())
 except: OWNER_ID = 0
 SUDO_IDS_STR = os.getenv("SUDO_IDS", "")
 
 # Game Constants
-BOT_NAME = "🫧 ʙᴀᴋᴀ ×͜࿐"
+BOT_NAME = "🫧 ᴀɴɢᴇʟ×͜࿐"
 REVIVE_COST = 500
 PROTECT_1D_COST = 1000
 PROTECT_2D_COST = 1800
