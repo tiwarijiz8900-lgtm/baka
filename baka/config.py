@@ -36,12 +36,12 @@ UPSTREAM_REPO = os.getenv("UPSTREAM_REPO", "https://github.com/tiwarijiz8900-lgt
 GIT_TOKEN = os.getenv("GIT_TOKEN", "")
 
 # Images & Links
-START_IMG_URL = os.getenv("START_IMG_URL", "https://files.catbox.moe/wvsxti.jpg") 
+START_IMG_URL = os.getenv("START_IMG_URL", "https://envs.sh/IL_.jpg") 
 HELP_IMG_URL = os.getenv("HELP_IMG_URL", "https://files.catbox.moe/3r4ihh.jpg") 
-WELCOME_IMG_URL = os.getenv("WELCOME_IMG_URL", "https://files.catbox.moe/3r4ihh.jpg") 
+WELCOME_IMG_URL = os.getenv("WELCOME_IMG_URL", "https://envs.sh/IL_.jpg") 
 
-SUPPORT_GROUP = os.getenv("SUPPORT_GROUP", "https://t.me/ShreyaBotSupport")
-SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "https://t.me/ShreyaBots")
+SUPPORT_GROUP = os.getenv("SUPPORT_GROUP", "https://t.me/Love_Ki_Duniyaa")
+SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "https://t.me/Love_Bot_143")
 OWNER_LINK = os.getenv("OWNER_LINK", "https://t.me/ll_WTF_SHEZADA_ll")
 
 # IDs
