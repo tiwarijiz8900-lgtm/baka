@@ -10,19 +10,22 @@ from telegram.ext import (
 )
 from telegram.request import HTTPXRequest
 
-# --- INTERNAL IMPORTS ---
+# ======================================================
+# INTERNAL IMPORTS
+# ======================================================
+
 from baka.config import TOKEN, PORT
 from baka.utils import log_to_channel, BOT_NAME
 
-# --- IMPORT ALL PLUGINS ---
+# ⭐⭐⭐ COUPLE GAMES ADDED HERE ⭐⭐⭐
 from baka.plugins import (
     start, economy, game, admin, broadcast, fun, events,
     welcome, ping, chatbot, riddle, social, ai_media,
-    waifu, collection, shop, daily
+    waifu, collection, shop, daily, couple_games
 )
 
 # ======================================================
-# FLASK SERVER
+# FLASK SERVER (Heroku/Render keep alive)
 # ======================================================
 
 app = Flask(__name__)
@@ -31,24 +34,30 @@ app = Flask(__name__)
 def health():
     return "Alive"
 
+
 def run_flask():
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
 
 
 # ======================================================
-# STARTUP
+# STARTUP MENU COMMANDS
 # ======================================================
 
 async def post_init(application):
 
     await application.bot.set_my_commands([
+
         ("start", "🌸 Menu"),
         ("help", "📖 Help"),
+
         ("bal", "👛 Wallet"),
         ("daily", "📅 Daily"),
         ("shop", "🛒 Shop"),
+
         ("dice", "🎲 Game"),
         ("draw", "🎨 AI Art"),
+
+        # 🤖 Chatbot
         ("chatbot", "🧠 AI Settings"),
         ("chaton", "💚 Chat ON"),
         ("chatoff", "🛑 Chat OFF"),
@@ -56,10 +65,18 @@ async def post_init(application):
         ("tagoff", "❌ Tag OFF"),
         ("tagall", "📢 Tag All"),
         ("ask", "🤖 Ask AI"),
+
+        # 💑 Couple Games ⭐⭐⭐
+        ("truth", "💗 Truth Game"),
+        ("dare", "🔥 Dare Game"),
+        ("quiz", "🧠 Love Quiz"),
+        ("couplegame", "💑 Random Couple Game"),
+
         ("ping", "📶 Ping")
     ])
 
     bot_info = await application.bot.get_me()
+
     await log_to_channel(application.bot, "start", {
         "user": "System",
         "chat": "Cloud",
@@ -99,7 +116,7 @@ if __name__ == '__main__':
 
 
     # ======================================================
-    # CHATBOT NEW COMMANDS ⭐⭐⭐
+    # 🤖 CHATBOT COMMANDS
     # ======================================================
 
     app_bot.add_handler(CommandHandler("chaton", chatbot.chaton))
@@ -113,7 +130,20 @@ if __name__ == '__main__':
 
 
     # ======================================================
-    # AI AUTO REPLY (MOST IMPORTANT)
+    # 💑 COUPLE GAMES (UNLIMITED) ⭐⭐⭐
+    # ======================================================
+
+    app_bot.add_handler(CommandHandler("truth", couple_games.truth))
+    app_bot.add_handler(CommandHandler("dare", couple_games.dare))
+    app_bot.add_handler(CommandHandler("quiz", couple_games.quiz))
+
+    # optional random mix game
+    if hasattr(couple_games, "couplegame"):
+        app_bot.add_handler(CommandHandler("couplegame", couple_games.couplegame))
+
+
+    # ======================================================
+    # 🔥 AI AUTO REPLY (UNLIMITED)
     # ======================================================
 
     app_bot.add_handler(
@@ -124,6 +154,8 @@ if __name__ == '__main__':
         group=4
     )
 
-
-    print("🔥 Bot Running With AI + Unlimited Chatbot + Tag System")
-    app_bot.run_polling(allowed_updates=Update.ALL_TYPES, drop_pending_updates=True)
+    print("🔥 Bot Running With AI + Unlimited Chatbot + Tag + Couple Games")
+    app_bot.run_polling(
+        allowed_updates=Update.ALL_TYPES,
+        drop_pending_updates=True
+        )
