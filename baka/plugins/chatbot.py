@@ -1,12 +1,11 @@
 import os
 import httpx
-import random
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.constants import ChatAction, ChatType
+from telegram.constants import ChatAction
 
 from baka.database import chatbot_collection
-from baka.utils import stylize_text
+
 
 # ======================================================
 # 🔥 SETTINGS
@@ -14,10 +13,10 @@ from baka.utils import stylize_text
 
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
-AI_URL = "https://api.sambanova.ai/v1/chat/completions"
+AI_URL = "https://cloud.sambanova.ai/api/v1/chat/completions"
 MODEL = "Meta-Llama-3-8B-Instruct"
 
-MAX_HISTORY = 15
+MAX_HISTORY = 20   # memory
 
 CHAT_ALWAYS_ON = True
 TAG_ENABLED = False
@@ -30,19 +29,19 @@ TAG_ENABLED = False
 async def chaton(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global CHAT_ALWAYS_ON
     CHAT_ALWAYS_ON = True
-    await update.message.reply_text("✅ Chatbot ON baby 😘")
+    await update.message.reply_text("✅ Chatbot ON baby 😘 Ab sirf tumse baat karungi")
 
 
 async def chatoff(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global CHAT_ALWAYS_ON
     CHAT_ALWAYS_ON = False
-    await update.message.reply_text("❌ Chatbot OFF")
+    await update.message.reply_text("❌ Chatbot OFF 😴")
 
 
 async def tagon(update: Update, context: ContextTypes.DEFAULT_TYPE):
     global TAG_ENABLED
     TAG_ENABLED = True
-    await update.message.reply_text("✅ Tag ON")
+    await update.message.reply_text("✅ Tag ON 🔥")
 
 
 async def tagoff(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -52,20 +51,25 @@ async def tagoff(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def tagall(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
     if not TAG_ENABLED:
-        return await update.message.reply_text("Tag disabled")
+        return await update.message.reply_text("❌ Tag disabled")
 
-    members = []
-    admins = await context.bot.get_chat_administrators(update.effective_chat.id)
+    chat_id = update.effective_chat.id
+    admins = await context.bot.get_chat_administrators(chat_id)
 
+    mentions = []
     for m in admins:
-        members.append(f"[{m.user.first_name}](tg://user?id={m.user.id})")
+        mentions.append(f"[{m.user.first_name}](tg://user?id={m.user.id})")
 
-    await update.message.reply_text(" ".join(members), parse_mode="Markdown")
+    await update.message.reply_text(
+        " ".join(mentions),
+        parse_mode="Markdown"
+    )
 
 
 # ======================================================
-# 🔥 AI FUNCTION (SAMBANOVA)
+# 🔥 AI CALL (SAMBANOVA FAST)
 # ======================================================
 
 async def ask_ai_raw(messages):
@@ -78,21 +82,21 @@ async def ask_ai_raw(messages):
     payload = {
         "model": MODEL,
         "messages": messages,
-        "temperature": 0.9,
+        "temperature": 0.95,
         "max_tokens": 120
     }
 
-    async with httpx.AsyncClient(timeout=20) as client:
+    async with httpx.AsyncClient(timeout=15) as client:
         r = await client.post(AI_URL, json=payload, headers=headers)
 
     if r.status_code == 200:
-        return r.json()["choices"][0]["message"]["content"]
+        return r.json()["choices"][0]["message"]["content"].strip()
 
-    return "Net slow hai baby 😭"
+    return "Baby net slow hai 😭 phir bolo na"
 
 
 # ======================================================
-# 🔥 AI RESPONSE
+# 🔥 AI RESPONSE LOGIC
 # ======================================================
 
 async def get_ai_response(chat_id: int, text: str, name: str):
@@ -101,10 +105,13 @@ async def get_ai_response(chat_id: int, text: str, name: str):
     history = doc.get("history", [])
 
     system_prompt = (
-        f"Tum ek cute Indian girlfriend ho. "
-        f"User ka naam {name} hai. "
-        f"Short Hinglish reply do. Flirty + sweet + caring. "
-        f"Max 1-2 line. Emoji use karo."
+        f"You are a cute indian girlfriend chatbot. "
+        f"User name is {name}. "
+        f"Reply in short Hinglish. "
+        f"Flirty, romantic, caring, sweet. "
+        f"Max 1-2 lines only. "
+        f"Use emojis. "
+        f"Never long answers."
     )
 
     messages = [{"role": "system", "content": system_prompt}]
@@ -116,6 +123,7 @@ async def get_ai_response(chat_id: int, text: str, name: str):
 
     reply = await ask_ai_raw(messages)
 
+    # save history
     history.append({"role": "user", "content": text})
     history.append({"role": "assistant", "content": reply})
 
@@ -129,7 +137,7 @@ async def get_ai_response(chat_id: int, text: str, name: str):
 
 
 # ======================================================
-# 🔥 MAIN MESSAGE HANDLER (UNLIMITED AUTO REPLY)
+# 🔥 MAIN AUTO REPLY (UNLIMITED)
 # ======================================================
 
 async def ai_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -144,28 +152,28 @@ async def ai_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if msg.text.startswith("/"):
         return
 
-    chat = update.effective_chat
     name = msg.from_user.first_name
 
-    await context.bot.send_chat_action(chat.id, ChatAction.TYPING)
+    await context.bot.send_chat_action(msg.chat.id, ChatAction.TYPING)
 
-    reply = await get_ai_response(chat.id, msg.text, name)
+    reply = await get_ai_response(msg.chat.id, msg.text, name)
 
-    await msg.reply_text(f"Hi {name} 😘 {stylize_text(reply)}")
+    # NORMAL TEXT (no stylize)
+    await msg.reply_text(f"Hi {name} 😘 {reply}")
 
 
 # ======================================================
-# 🔥 /ask command
+# 🔥 /ask COMMAND
 # ======================================================
 
 async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if not context.args:
-        return await update.message.reply_text("/ask kuch likho baby")
+        return await update.message.reply_text("Baby kuch pucho na 😚")
 
     text = " ".join(context.args)
     name = update.effective_user.first_name
 
     res = await get_ai_response(update.effective_chat.id, text, name)
 
-    await update.message.reply_text(res)
+    await update.message.reply_text(f"{res}")
