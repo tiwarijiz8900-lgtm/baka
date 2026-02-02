@@ -1,1 +1,1 @@
-worker: python Ryan.py
+web: gunicorn Ryan:app
