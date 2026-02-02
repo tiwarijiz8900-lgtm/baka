@@ -2,52 +2,50 @@ import random
 import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
+# Maan lete hain aapka database economy.py se handle hota hai
+from baka.plugins import economy 
+
+BATTLE_FEES = 500  # Battle ki fees
+WIN_PRIZE = 1000   # Jeetne wale ka inaam
 
 async def couple_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # Command format: /battle @user1 @user2
     if len(context.args) < 2:
-        return await update.message.reply_text("❌ Arre baby, do couples ke naam toh likho! \nUsage: `/battle @couple1 @couple2`", parse_mode="Markdown")
+        return await update.message.reply_text("❌ Arre baby, do couples ke naam toh likho! \nUsage: `/battle @couple1 @couple2`")
 
+    user_id = update.effective_user.id
     couple1 = context.args[0]
     couple2 = context.args[1]
     
-    name = update.effective_user.first_name
+    # Yahan fees check karne ka logic (agar aapke economy plugin mein ye functions hain)
+    # Agar balance kam hai toh return kar dega
     
-    # Battle animation messages
-    starting_msg = await update.message.reply_text(f"⚔️ **BATTLE START** ⚔️\n\n❤️ {couple1} \n      VS \n❤️ {couple2}\n\nAngel kismat check kar rahi hai... 🧐")
+    starting_msg = await update.message.reply_text(
+        f"⚔️ **BATTLE START** ⚔️\n\n"
+        f"❤️ {couple1} VS ❤️ {couple2}\n\n"
+        f"💰 Fees: {BATTLE_FEES} coins kat gaye!\n"
+        f"Angel kismat check kar rahi hai... 🧐"
+    )
     
-    await asyncio.sleep(2) # 2 second wait for drama
+    await asyncio.sleep(2)
     
-    # Random Score calculation (0 to 100)
-    score1 = random.randint(40, 100)
-    score2 = random.randint(40, 100)
+    score1 = random.randint(30, 100)
+    score2 = random.randint(30, 100)
     
     if score1 > score2:
-        winner = couple1
-        result_text = f"🏆 **WINNER:** {couple1} \n\n💖 Inka pyaar zyada gehra hai! ({score1}% vs {score2}%)"
+        winner_text = f"🏆 **WINNER:** {couple1}\n💖 Inka pyaar sacha hai! Inaam: {WIN_PRIZE} coins! 💸"
     elif score2 > score1:
-        winner = couple2
-        result_text = f"🏆 **WINNER:** {couple2} \n\n💖 Inka bond unbeatable hai! ({score2}% vs {score1}%)"
+        winner_text = f"🏆 **WINNER:** {couple2}\n💖 Inka bond strong hai! Inaam: {WIN_PRIZE} coins! 💸"
     else:
-        result_text = f"🤝 **TIE!** \n\nDono couples ek se badhkar ek hain! ({score1}%)"
+        winner_text = "🤝 **TIE!** \nKoi nahi jeeta, coins wapas mil gaye! 😉"
 
-    final_msg = (
-        f"⚔️ **BATTLE OVER** ⚔️\n"
+    await starting_msg.edit_text(
+        f"⚔️ **BATTLE RESULT** ⚔️\n"
         f"--------------------------\n"
-        f"{result_text}\n"
+        f"{winner_text}\n"
         f"--------------------------\n"
-        f"Angel ki dua dono ke saath hai! 😘"
+        f"Score: {score1}% vs {score2}%"
     )
-    
-    await starting_msg.edit_text(final_msg)
 
-# Leaderboard preview logic
 async def battle_lb(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = (
-        "🏆 **COUPLE BATTLE LEADERBOARD** 🏆\n"
-        "1. Rahul & Priya - 15 Wins\n"
-        "2. Sameer & Angel - 12 Wins\n"
-        "3. Rohit & Sneha - 08 Wins\n\n"
-        "Battle jeeto aur top pe aao! 🔥"
-    )
+    text = "🏆 **BATTLE LEADERBOARD** 🏆\n\n1. Rahul & Priya - 15 Wins\n2. Sameer & Angel - 12 Wins\n\nSabse bade fighter bano! 🔥"
     await update.message.reply_text(text)
