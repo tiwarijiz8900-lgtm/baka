@@ -24,7 +24,7 @@ from baka.plugins import (
     riddle, shop, social, start, waifu, welcome, wishes
 )
 
-# --- WEB SERVER FOR HEROKU (Keep-Alive) ---
+# --- FAST SERVER FOR HEROKU (Keep-Alive) ---
 app = Flask(__name__)
 @app.route('/')
 def health(): return f"✨ {BOT_NAME} Engine is Online! 🚀"
