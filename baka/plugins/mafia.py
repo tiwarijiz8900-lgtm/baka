@@ -4,33 +4,43 @@ from telegram import Update
 from telegram.ext import ContextTypes
 from baka.plugins.economy import get_balance, update_balance
 
-# Gangs storage
-GANGS = {} # {gang_name: {"leader": id, "members": [ids], "vault": 0}}
+# Gangs storage logic (In-memory for now, use DB for permanent)
+GANGS = {} 
 
-async def create_gang(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def attack_gang(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
-    if not context.args:
-        return await update.message.reply_text("🕵️ Gang ka naam toh batao! Usage: `/creategang [name]`")
+    if len(context.args) < 1:
+        return await update.message.reply_text("⚔️ **Usage:** `/attack [GangName]`\nKiske vault pe hamla karna hai?")
+
+    target_gang = " ".join(context.args)
     
-    gang_name = " ".join(context.args)
-    if gang_name in GANGS:
-        return await update.message.reply_text("❌ Ye Gang pehle se bani hui hai!")
+    if target_gang not in GANGS:
+        return await update.message.reply_text("❌ Ye gang exist nahi karti!")
 
-    GANGS[gang_name] = {"leader": user.id, "members": [user.id], "vault": 0}
-    await update.message.reply_text(f"🔥 **MAFIA GANG CREATED!** 🔥\n\nAb aap **{gang_name}** ke Don hain! `/joingang {gang_name}` se logo ko bulaiye.")
+    # Attack Animation
+    msg = await update.message.reply_text(f"🧨 **ATTACK!** {user.first_name} ki gang ne {target_gang} ke vault pe bomb laga diya hai...")
+    await asyncio.sleep(2)
 
-async def rob_bank(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    user_id = user.id
-
-    # 30% Chance of getting caught
-    success = random.choices([True, False], weights=[70, 30])[0]
+    # Success Logic (50-50 Chance)
+    success = random.choice([True, False])
     
     if success:
-        loot = random.randint(5000, 15000)
-        await update_balance(user_id, loot)
-        await update.message.reply_text(f"💰 **HEIST SUCCESSFUL!** 💰\n\n{user.first_name} ne bank loot liya aur {loot} coins le kar faraar ho gaya! 🚓💨")
+        stolen_coins = random.randint(2000, 8000)
+        GANGS[target_gang]["vault"] -= stolen_coins
+        await update_balance(user.id, stolen_coins)
+        await msg.edit_text(f"🔥 **HEIST SUCCESS!** 🔥\n\nAapne {target_gang} ke vault se {stolen_coins} coins chura liye! 💰💨")
     else:
-        fine = 2000
-        await update_balance(user_id, -fine)
-        await update.message.reply_text(f"👮 **BUSTED!** 👮\n\nPolice ne {user.first_name} ko pakad liya! Jail ho gayi aur {fine} coins ka jurmana laga. 🚔")
+        penalty = 1500
+        await update_balance(user.id, -penalty)
+        await msg.edit_text(f"💀 **FAILED!** {target_gang} ke guards ne aapko peet kar bhaga diya. \n💸 Penalty: {penalty} coins.")
+
+async def gang_info(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not context.args:
+        return await update.message.reply_text("🔎 Gang ka naam likho: `/ganginfo [Name]`")
+    
+    name = " ".join(context.args)
+    if name in GANGS:
+        g = GANGS[name]
+        await update.message.reply_text(f"🛡️ **GANG:** {name}\n👑 **Leader:** {g['leader']}\n💰 **Vault:** {g['vault']} coins")
+    else:
+        await update.message.reply_text("❌ Gang nahi mili.")
