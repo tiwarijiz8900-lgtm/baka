@@ -1,59 +1,58 @@
+import httpx
 import random
 from telegram import Update
 from telegram.ext import ContextTypes
 
-# ======================================================
-# 🔥 UNLIMITED DATA (Inhe aap jitna chahe bada sakte hain)
-# ======================================================
-
-TRUTHS = [
-    "Kya tumne kabhi kisi se flirt karne ke liye jhoot bola hai? 😉",
-    "Tumhari sabse badi insecurity kya hai? 🙈",
-    "Kya tum abhi bhi apne ex ke baare mein sochte ho? 🤫",
-    "Tumne kabhi kisi ko galat message bhej kar delete kiya hai? 😂",
-    "Agar tumhe mujhse ek sach chhupana ho, toh wo kya hoga? 😇",
-    "Kya tumne kabhi kisi ki profile stalk ki hai? 📱",
-    "Tumhe mujh mein sabse buri aadat kya lagti hai? 🙊",
-    "Pehli nazar ka pyaar ya pehli nazar ka dhoka? 💘",
-    "Tumne kabhi kisi ke saath screen sharing mein galti ki hai? 🖥️",
-    "Tumhara sabse bada 'guilty pleasure' kya hai? 🍫"
-]
-
-DARES = [
-    "Apne partner ko 'I Love You' bolo voice note mein! 🎙️",
-    "Apne phone ka last screenshot group mein bhejo! 📸",
-    "Kisi ko bhi randomly 'I miss you' message karo aur screenshot dikhao! 🔥",
-    "Agli 2 minute tak sirf emoji mein baat karo 😶",
-    "Apne bio mein likho 'Angel's Property' 😇",
-    "Group mein ek romantic gaana gao! 🎵",
-    "Apne crush ka naam bina sharmaye batao! 😍",
-    "Ek selfie bhejo abhi bina filter ke! 🤳",
-    "Apne status pe likho 'Main Pagal Hoon' aur 5 min rehne do! 🤪"
-]
-
-QUIZZES = [
-    {"q": "Sacha pyaar kitni baar hota hai?", "a": "Sirf ek baar... ya shayad har baar? 😉"},
-    {"q": "Relationship mein trust zyada bada hai ya respect?", "a": "Dono hi barabar hain! ❤️"},
-    {"q": "Ek perfect date kahan honi chahiye?", "a": "Coffee, Dinner ya Long drive? 🕯️"},
-    {"q": "Kya break-up ke baad dosti ho sakti hai?", "a": "Ye toh dil pe depend karta hai! 💔"},
-    {"q": "Ladkiyon ko sabse zyada kya pasand hai?", "a": "Care, Time aur Attention! ✨"}
-]
+# Free API Endpoints
+TRUTH_API = "https://api.truthordarebot.xyz/v1/truth"
+DARE_API = "https://api.truthordarebot.xyz/v1/dare"
 
 # ======================================================
-# 🎮 LOGIC: JO HAR BAAR CHANGE HOTA RAHE
+# 🔥 UNLIMITED TRUTH (From API)
 # ======================================================
 
 async def truth(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    # random.sample use karne se repetition kam hoti hai
-    question = random.choice(TRUTHS)
     name = update.effective_user.first_name
-    await update.message.reply_text(f"✨ **TRUTH FOR {name}** ✨\n\n{question}\n\nJhoot mat bolna, Angel sab dekh rahi hai! 😉")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(TRUTH_API)
+            if response.status_code == 200:
+                question = response.json().get("question")
+                # Angel theme reply
+                await update.message.reply_text(f"✨ **TRUTH FOR {name}** ✨\n\nQuestion: {question}\n\nJhoot mat bolna, Angel sab dekh rahi hai! 😉")
+            else:
+                await update.message.reply_text("API busy hai baby, thoda ruko! 😴")
+    except Exception:
+        await update.message.reply_text("Net slow hai, fir se try karo 🥺")
+
+# ======================================================
+# 🔥 UNLIMITED DARE (From API)
+# ======================================================
 
 async def dare(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    task = random.choice(DARES)
     name = update.effective_user.first_name
-    await update.message.reply_text(f"🔥 **DARE FOR {name}** 🔥\n\n{task}\n\nPure nahi kiya toh Angel naraz ho jayegi! 😘")
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(DARE_API)
+            if response.status_code == 200:
+                task = response.json().get("question")
+                await update.message.reply_text(f"🔥 **DARE FOR {name}** 🔥\n\nTask: {task}\n\nPure nahi kiya toh Angel naraz ho jayegi! 😘")
+            else:
+                await update.message.reply_text("API down hai baby 😴")
+    except Exception:
+        await update.message.reply_text("Kuch galat hua, phir se try karo! ❌")
+
+# ======================================================
+# 🧠 UNLIMITED QUIZ (Mix Logic)
+# ======================================================
 
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    item = random.choice(QUIZZES)
-    await update.message.reply_text(f"🧠 **LOVE QUIZ** 🧠\n\nSawal: {item['q']}\n\nAngel tumhara jawab sunna chahti hai! ❤️")
+    # Quiz ke liye hum ek badi list rakhenge kyunki ye special love-related hai
+    QUIZZES = [
+        "Agar hum kisi island pe phas gaye, toh tum kya karoge? 🤔",
+        "Tumhare hisab se sacha pyaar kya hai? ❤️",
+        "Relationship mein sabse badi galti kya ho sakti hai? 💔",
+        "Kya tum mujhse kabhi bore hoge? 🥺",
+        "Pehli nazar ka pyaar sach hota hai? ✨"
+    ]
+    await update.message.reply_text(f"🧠 **LOVE QUIZ** 🧠\n\nSawal: {random.choice(QUIZZES)}\n\nAngel tumhara jawab sunna chahti hai! ❤️")
