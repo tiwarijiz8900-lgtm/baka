@@ -37,49 +37,50 @@ from baka.utils import log_to_channel, BOT_NAME
 from baka.plugins import (
     start, economy, game, admin, broadcast, ping, chatbot, 
     daily, couple_games, wishes, couple_battle, couple_room, 
-    premium, exclusive, shop
+    premium, exclusive, shop, breakup
 )
 
 # ======================================================
-# 🌐 FLASK SERVER (For 24/7 Deployment)
+# 🌐 FLASK WEB SERVER
 # ======================================================
 app = Flask(__name__)
 
 @app.route('/')
 def health():
-    return f"✨ {BOT_NAME} Global Engine is Online & Wishing Everyone! 🌸"
+    return f"✨ {BOT_NAME} Ultimate System is Online! 🚀"
 
 def run_flask():
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
 
 # ======================================================
-# 📜 BOT MENU & COMMANDS
+# 📜 BOT MENU (Commands List)
 # ======================================================
 async def post_init(application):
     await application.bot.set_my_commands([
-        ("start", "🌸 Start Angel"),
-        ("bal", "👛 Check Balance"),
-        ("daily", "📅 Claim Daily Coins"),
-        ("premium", "💎 VIP Plans"),
-        ("apply_premium", "📩 Submit Payment ID"),
+        ("start", "🌸 Start Bot"),
+        ("bal", "👛 Check Coins"),
+        ("daily", "📅 Claim Daily"),
+        ("top", "🏆 Richest List"),
         ("battle", "⚔️ Couple Battle"),
-        ("propose", "🌹 Propose Someone"),
+        ("truth", "💗 Truth"),
+        ("dare", "🔥 Dare"),
+        ("propose", "🌹 Propose"),
+        ("premium", "💎 VIP Plans"),
+        ("breakup", "💔 Breakup Mode"),
         ("hug", "🫂 VIP Hug"),
-        ("kiss", "💋 VIP Kiss"),
-        ("flirt", "😏 VIP Flirt"),
-        ("top", "🏆 Richest Users"),
         ("ping", "📶 Speed Check")
     ])
-    print(f"✅ {BOT_NAME} Master System Ready!")
+    print(f"✅ {BOT_NAME} All Features Integrated!")
 
 # ======================================================
-# ⚙️ MAIN ENGINE EXECUTION
+# ⚙️ MAIN BOT ENGINE
 # ======================================================
 if __name__ == '__main__':
 
+    # Flask background thread
     Thread(target=run_flask, daemon=True).start()
 
-    # High-Performance Setup
+    # High-Performance Request Setup
     t_request = HTTPXRequest(connection_pool_size=30, connect_timeout=60)
 
     app_bot = (
@@ -90,20 +91,12 @@ if __name__ == '__main__':
         .build()
     )
 
-    # --- 1. ADMIN & CORE HANDLERS ---
+    # --- 1. CORE & ADMIN ---
     app_bot.add_handler(CommandHandler("start", start.start))
     app_bot.add_handler(CommandHandler("ping", ping.ping))
-    app_bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
+    app_bot.add_handler(CommandHandler("broadcast", admin.broadcast))
 
-    # --- 2. PREMIUM SYSTEM (Approval + Expiry) ---
-    app_bot.add_handler(CommandHandler("premium", premium.premium_menu))
-    app_bot.add_handler(CommandHandler("apply_premium", premium.apply_premium))
-    app_bot.add_handler(CallbackQueryHandler(premium.premium_callback, pattern="^prem_"))
-
-    # --- 3. EXCLUSIVE VIP ACTIONS ---
-    app_bot.add_handler(CommandHandler(["hug", "kiss", "flirt"], exclusive.premium_action))
-
-    # --- 4. ECONOMY & REWARDS ---
+    # --- 2. ECONOMY & SHOP ---
     app_bot.add_handler(CommandHandler("bal", economy.balance))
     app_bot.add_handler(CommandHandler("daily", daily.daily_reward))
     app_bot.add_handler(CommandHandler("top", economy.top_users))
@@ -112,27 +105,33 @@ if __name__ == '__main__':
     app_bot.add_handler(CommandHandler("shop", shop.shop_menu))
     app_bot.add_handler(CallbackQueryHandler(shop.shop_callback, pattern="^shop_"))
 
-    # --- 5. COUPLE SYSTEM (Battle & Room) ---
+    # --- 3. PREMIUM & BREAKUP SYSTEM ---
+    app_bot.add_handler(CommandHandler("premium", premium.premium_menu))
+    app_bot.add_handler(CommandHandler("apply_premium", premium.apply_premium))
+    app_bot.add_handler(CallbackQueryHandler(premium.premium_callback, pattern="^prem_"))
+    app_bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
+
+    # --- 4. COUPLE GAMES & ACTIONS ---
     app_bot.add_handler(CommandHandler("battle", couple_battle.couple_battle))
-    app_bot.add_handler(CommandHandler("battlelb", couple_battle.battle_lb))
+    app_bot.add_handler(CommandHandler("truth", couple_games.truth))
+    app_bot.add_handler(CommandHandler("dare", couple_games.dare))
+    app_bot.add_handler(CommandHandler(["hug", "kiss", "flirt"], exclusive.premium_action))
+
+    # --- 5. COUPLE ROOM ---
     app_bot.add_handler(CommandHandler("propose", couple_room.propose))
     app_bot.add_handler(CommandHandler("accept", couple_room.accept_proposal))
     app_bot.add_handler(CommandHandler("couplestatus", couple_room.couple_status))
 
-    # --- 6. UNLIMITED FUN ---
-    app_bot.add_handler(CommandHandler("truth", couple_games.truth))
-    app_bot.add_handler(CommandHandler("dare", couple_games.dare))
+    # --- 6. AUTO HANDLERS (Priority Order) ---
 
-    # --- 7. AUTO HANDLERS (Priority Order) ---
-    
-    # Priority 1: Wishes (GM, GN, Festivals)
-    # Isko Group 3 mein rakha hai taaki ye AI se pehle check ho.
+    # Priority 1: Auto Wishes (Group 3)
+    # Isse bot "Good Morning" pe pehle reply dega AI se pehle.
     app_bot.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, wishes.wish_handler),
         group=3
     )
-
-    # Priority 2: AI Chatbot & Sticker Handling
+    
+    # Priority 2: AI Chatbot (Group 4)
     app_bot.add_handler(
         MessageHandler(
             (filters.TEXT | filters.Sticker.ALL) & ~filters.COMMAND,
@@ -141,5 +140,5 @@ if __name__ == '__main__':
         group=4
     )
 
-    print(f"🚀 {BOT_NAME} All-In-One Bot is Running!")
+    print(f"🚀 {BOT_NAME} Started Successfully with All Plugins!")
     app_bot.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
