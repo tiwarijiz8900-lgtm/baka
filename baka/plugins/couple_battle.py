@@ -1,51 +1,34 @@
 import random
-import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
-# Maan lete hain aapka database economy.py se handle hota hai
-from baka.plugins import economy 
+from baka.plugins.economy import get_balance, update_balance
 
-BATTLE_FEES = 150  # Battle ki fees
-WIN_PRIZE = 700   # Jeetne wale ka inaam
+async def multi_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    # Example command: /multibattle @partner1 @enemy1 @enemy2
+    if len(context.args) < 3:
+        return await update.message.reply_text("❌ **Usage:** `/multibattle @partner @enemy1 @enemy2`\n\nIsme 2 couples ki jung hogi! ⚔️")
 
-async def couple_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if len(context.args) < 2:
-        return await update.message.reply_text("❌ Arre baby, do couples ke naam toh likho! \nUsage: `/battle @couple1 @couple2`")
+    user = update.effective_user
+    partner = context.args[0]
+    enemy1 = context.args[1]
+    enemy2 = context.args[2]
 
-    user_id = update.effective_user.id
-    couple1 = context.args[0]
-    couple2 = context.args[1]
-    
-    # Yahan fees check karne ka logic (agar aapke economy plugin mein ye functions hain)
-    # Agar balance kam hai toh return kar dega
-    
-    starting_msg = await update.message.reply_text(
-        f"⚔️ **BATTLE START** ⚔️\n\n"
-        f"❤️ {couple1} VS ❤️ {couple2}\n\n"
-        f"💰 Fees: {BATTLE_FEES} coins kat gaye!\n"
-        f"Angel kismat check kar rahi hai... 🧐"
-    )
-    
-    await asyncio.sleep(2)
-    
-    score1 = random.randint(30, 100)
-    score2 = random.randint(30, 100)
-    
-    if score1 > score2:
-        winner_text = f"🏆 **WINNER:** {couple1}\n💖 Inka pyaar sacha hai! Inaam: {WIN_PRIZE} coins! 💸"
-    elif score2 > score1:
-        winner_text = f"🏆 **WINNER:** {couple2}\n💖 Inka bond strong hai! Inaam: {WIN_PRIZE} coins! 💸"
+    # Entry Fee
+    fee = 250
+    if await get_balance(user.id) < fee:
+        return await update.message.reply_text(f"💰 Battle ke liye kam se kam {fee} coins chahiye!")
+
+    # Battle Animation/Text
+    await update.message.reply_text(f"⚔️ **MEGA BATTLE START!** ⚔️\n\n❤️ **TEAM A:** {user.first_name} & {partner}\n      **VS**\n💙 **TEAM B:** {enemy1} & {enemy2}\n\nJung jaari hai... 🛡️")
+
+    # Result Calculation
+    win_chance = random.choice(["A", "B"])
+    prize = fee * 2
+
+    if win_chance == "A":
+        await update_balance(user.id, prize)
+        result = f"🏆 **TEAM A JEET GAYI!** 🏆\n\n{user.first_name} aur {partner} ne milkar {enemy1} aur {enemy2} ki dhajjiyan uda di! \n💰 Prize: {prize} coins Team A ko mile!"
     else:
-        winner_text = "🤝 **TIE!** \nKoi nahi jeeta, coins wapas mil gaye! 😉"
+        result = f"💀 **TEAM B JEET GAYI!** 💀\n\n{enemy1} aur {enemy2} ne Team A ko dhool chata di! \n🔥 {user.first_name}, agli baar taiyari karke aana!"
 
-    await starting_msg.edit_text(
-        f"⚔️ **BATTLE RESULT** ⚔️\n"
-        f"--------------------------\n"
-        f"{winner_text}\n"
-        f"--------------------------\n"
-        f"Score: {score1}% vs {score2}%"
-    )
-
-async def battle_lb(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = "🏆 **BATTLE LEADERBOARD** 🏆\n\n1. Rahul & Priya - 15 Wins\n2. Sameer & Angel - 12 Wins\n\nSabse bade fighter bano! 🔥"
-    await update.message.reply_text(text)
+    await update.message.reply_text(result)
