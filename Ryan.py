@@ -10,11 +10,12 @@ from telegram.ext import (
 )
 from telegram.request import HTTPXRequest
 
-# --- LOGGING ---
+# --- LOGGING SETUP ---
 logging.basicConfig(level=logging.INFO)
 
 # --- PLUGINS IMPORT ---
-from baka.config import TOKEN, PORT
+# Aapke screenshots ke hisaab se saare plugins yahan hain
+from baka.config import TOKEN, PORT, BOT_NAME
 from baka.plugins import (
     admin, ai_media, antispam, breakup, broadcast, chatbot, 
     collection, couple_battle, couple_games, daily, economy, 
@@ -23,32 +24,31 @@ from baka.plugins import (
     riddle, shop, social, start, waifu, welcome, wishes
 )
 
-# --- WEB SERVER FOR HEROKU ---
+# --- WEB SERVER FOR HEROKU (Keep-Alive) ---
 app = Flask(__name__)
 @app.route('/')
-def health(): return "✨ Angel Master Economy System is Online! 🚀"
+def health(): return f"✨ {BOT_NAME} Engine is Online! 🚀"
 
 def run_flask():
     app.run(host='0.0.0.0', port=PORT)
 
-# --- BOT COMMANDS SETTING ---
+# --- BOT INITIALIZATION ---
 async def post_init(application):
     await application.bot.set_my_commands([
-        ("register", "🔑 Create Wallet"),
-        ("bal", "👛 Wallet & Profile"),
-        ("give", "💸 Send Coins to Friend"),
-        ("top", "🏆 Leaderboard"),
-        ("claim", "💎 Group Bonus"),
+        ("start", "🌸 Start Angel"),
+        ("premium", "🌟 Plans & UPI"),
+        ("myplan", "⏳ Check Validity"),
+        ("approve", "✅ Admin Approval"),
         ("marry", "💍 Propose"),
-        ("rob", "💰 Bank Robbery"),
-        ("shop", "🛒 Item Shop"),
-        ("help", "📜 Help Menu")
+        ("match", "❤️ Compatibility"),
+        ("ping", "📶 Speed Check")
     ])
 
 if __name__ == '__main__':
+    # Threading Flask for Heroku
     Thread(target=run_flask, daemon=True).start()
 
-    # Application Build
+    # App Build
     app_bot = (
         ApplicationBuilder()
         .token(TOKEN)
@@ -57,44 +57,36 @@ if __name__ == '__main__':
         .build()
     )
 
-    # --- 1. CORE & START ---
-    app_bot.add_handler(CommandHandler("start", start.start))
-    app_bot.add_handler(CommandHandler("help", start.start)) # Using start as help placeholder
-
-    # --- 2. ECONOMY SYSTEM (As per your code) ---
-    app_bot.add_handler(CommandHandler("register", economy.register))
-    app_bot.add_handler(CommandHandler("claim", economy.claim))
-    app_bot.add_handler(CommandHandler(["bal", "balance", "profile"], economy.balance))
-    app_bot.add_handler(CommandHandler(["top", "ranking"], economy.ranking))
-    app_bot.add_handler(CommandHandler(["give", "pay"], economy.give))
+    # --- HANDLERS INTEGRATION ---
     
-    # Callback for Inventory View
-    app_bot.add_handler(CallbackQueryHandler(economy.inventory_callback, pattern="^inv_view\|"))
+    # Core & Admin
+    app_bot.add_handler(CommandHandler("start", start.start))
+    app_bot.add_handler(CommandHandler("ping", ping.ping))
+    app_bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
+    app_bot.add_handler(CommandHandler(["ban", "mute", "unmute"], [moderation.ban_user, moderation.mute_user, moderation.unmute_user]))
 
-    # --- 3. MAFIA & CRIME ---
-    app_bot.add_handler(CommandHandler("rob", mafia.rob_bank))
-    app_bot.add_handler(CommandHandler("creategang", mafia.create_gang))
-    app_bot.add_handler(CommandHandler("attack", mafia.attack_gang))
+    # Premium & Subscription (Based on your new request)
+    app_bot.add_handler(CommandHandler("premium", premium.premium_plans))
+    app_bot.add_handler(CommandHandler("myplan", premium.check_plan))
+    app_bot.add_handler(CommandHandler("approve", premium.approve_user))
 
-    # --- 4. LOVE & MARRIAGE ---
+    # Social & Fun
     app_bot.add_handler(CommandHandler("marry", marriage.marry))
-    app_bot.add_handler(CommandHandler("accept_shadi", marriage.accept_shadi))
     app_bot.add_handler(CommandHandler("match", love_match.love_match))
+    app_bot.add_handler(CommandHandler("waifu", waifu.waifu_handler))
+    app_bot.add_handler(CommandHandler(["hug", "kiss", "slap"], exclusive.premium_action))
 
-    # --- 5. GAMES & FUN ---
-    app_bot.add_handler(CommandHandler("battle", couple_battle.couple_battle))
-    app_bot.add_handler(CommandHandler("waifu", waifu.get_waifu))
-    app_bot.add_handler(CommandHandler("riddle", riddle.get_riddle))
-    app_bot.add_handler(CommandHandler("shop", shop.shop_menu))
+    # Modes & AI
+    app_bot.add_handler(CommandHandler("flirtmode", flirt_mode.flirt_toggle))
+    app_bot.add_handler(CommandHandler("jealous", jealous.jealous_toggle))
+    app_bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
 
-    # --- 6. SECURITY & ADMIN ---
-    app_bot.add_handler(CommandHandler("ban", moderation.ban_user))
-    app_bot.add_handler(CommandHandler("mute", moderation.mute_user))
-    app_bot.add_handler(MessageHandler(filters.Entity("url"), antispam.link_guard), group=1)
-
-    # --- 7. AUTO HANDLERS ---
+    # Auto Replies & Chatbot (Groq/Free AI)
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, wishes.wish_handler), group=3)
     app_bot.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, chatbot.ai_message_handler), group=4)
 
-    print("🚀 ANGEL MASTER BOT START SUCCESSFULLY!")
+    # Security
+    app_bot.add_handler(MessageHandler(filters.Entity("url"), antispam.link_guard), group=1)
+
+    print(f"🚀 {BOT_NAME} is starting on Heroku...")
     app_bot.run_polling(drop_pending_updates=True)
