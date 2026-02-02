@@ -5,8 +5,8 @@ from telegram.ext import ContextTypes
 # Maan lete hain aapka database economy.py se handle hota hai
 from baka.plugins import economy 
 
-BATTLE_FEES = 500  # Battle ki fees
-WIN_PRIZE = 1000   # Jeetne wale ka inaam
+BATTLE_FEES = 150  # Battle ki fees
+WIN_PRIZE = 700   # Jeetne wale ka inaam
 
 async def couple_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 2:
