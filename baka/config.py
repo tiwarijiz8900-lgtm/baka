@@ -11,18 +11,29 @@ START_TIME = time.time()
 
 TOKEN = os.getenv("BOT_TOKEN")
 MONGO_URI = os.getenv("MONGO_URI")
-PORT = int(os.environ.get("PORT", 5000))
+PORT = int(os.environ.get("PORT", 8080)) # Heroku standard port
 
 
 # ===============================
-# 🔥 AI SYSTEM (SambaNova Only)
+# 🔥 FREE AI SYSTEM (Groq Cloud)
 # ===============================
-# ❌ Mistral removed
-# ✅ Only SambaNova
+# Replace SambaNova with Groq for better speed
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+AI_MODEL = "llama-3.1-70b-versatile"
 
-SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY", "")
-SAMBANOVA_URL = "https://cloud.sambanova.ai/api/v1/chat/completions"
-AI_MODEL = "Meta-Llama-3-8B-Instruct"
+
+# ===============================
+# 🔥 PREMIUM & UPI SETTINGS
+# ===============================
+
+UPI_ID = os.getenv("UPI_ID", "ll_WTF_SHEZADA_ll@upi") 
+UPI_QR_IMAGE = os.getenv("UPI_QR_IMAGE", "https://files.catbox.moe/wx05mx.jpg")
+
+# Subscription Plans (INR)
+PLAN_1_MONTH = 99
+PLAN_1_YEAR = 899
+PLAN_LIFETIME = 1499
 
 
 # ===============================
@@ -122,7 +133,7 @@ MIN_CLAIM_MEMBERS = 100
 
 
 # ===============================
-# 🔥 SHOP ITEMS (UNCHANGED)
+# 🔥 SHOP ITEMS
 # ===============================
 
 SHOP_ITEMS = [
