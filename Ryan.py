@@ -15,12 +15,7 @@ from telegram.request import HTTPXRequest
 # 🛠️ INTERNAL SETUP & LOGGING
 # ======================================================
 os.environ["GIT_PYTHON_REFRESH"] = "quiet"
-
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 if not os.path.exists("downloads"):
     os.makedirs("downloads")
@@ -29,7 +24,7 @@ if platform.system() == 'Windows':
     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 # ======================================================
-# 🧩 PLUGINS IMPORTS (Ensure these files exist in baka/plugins/)
+# 🧩 PLUGINS IMPORTS
 # ======================================================
 from baka.config import TOKEN, PORT
 from baka.utils import log_to_channel, BOT_NAME
@@ -37,7 +32,8 @@ from baka.utils import log_to_channel, BOT_NAME
 from baka.plugins import (
     start, economy, game, admin, broadcast, ping, chatbot, 
     daily, couple_games, wishes, couple_battle, couple_room, 
-    premium, exclusive, shop, breakup, jealous
+    premium, exclusive, shop, breakup, jealous, flirt_mode,
+    love_match, marriage
 )
 
 # ======================================================
@@ -47,42 +43,43 @@ app = Flask(__name__)
 
 @app.route('/')
 def health():
-    return f"✨ {BOT_NAME} Ultimate System is Active! 🚀"
+    return f"✨ {BOT_NAME} Global Master Engine is Live! 🚀"
 
 def run_flask():
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
 
 # ======================================================
-# 📜 BOT MENU & COMMANDS
+# 📜 BOT MENU & COMMANDS SETUP
 # ======================================================
 async def post_init(application):
     await application.bot.set_my_commands([
         ("start", "🌸 Start Angel"),
-        ("bal", "👛 Check Coins"),
-        ("daily", "📅 Claim Daily Reward"),
+        ("bal", "👛 Wallet/Balance"),
+        ("daily", "📅 Daily Coins"),
         ("premium", "💎 VIP Plans"),
-        ("apply_premium", "📩 Submit Payment"),
+        ("match", "❤️ Dil Match %"),
+        ("marry", "💍 Propose Marriage"),
         ("battle", "⚔️ 1v1 Battle"),
-        ("multibattle", "⚔️ 2v2 Team Battle"),
-        ("breakup", "💔 Toggle Breakup Mode"),
-        ("jealous", "🤨 Toggle Jealous Mode"),
-        ("propose", "🌹 Propose Partner"),
+        ("multibattle", "⚔️ 2v2 Couple Battle"),
+        ("flirtmode", "😘 Toggle Flirt AI"),
+        ("jealous", "🤨 Toggle Jealousy"),
+        ("breakup", "💔 Toggle Breakup"),
         ("hug", "🫂 VIP Hug"),
         ("kiss", "💋 VIP Kiss"),
-        ("top", "🏆 Global Leaderboard"),
-        ("ping", "📶 Bot Speed")
+        ("top", "🏆 Global Ranking"),
+        ("ping", "📶 Speed Check")
     ])
-    print(f"✅ {BOT_NAME} All Systems Loaded Successfully!")
+    print(f"✅ {BOT_NAME} Master System Operational!")
 
 # ======================================================
 # ⚙️ MAIN BOT ENGINE
 # ======================================================
 if __name__ == '__main__':
 
-    # Start Flask Web Server
+    # Start Flask Web Server in Background
     Thread(target=run_flask, daemon=True).start()
 
-    # High-Performance Setup
+    # High-Performance Request Setup
     t_request = HTTPXRequest(connection_pool_size=30, connect_timeout=60)
 
     app_bot = (
@@ -93,12 +90,12 @@ if __name__ == '__main__':
         .build()
     )
 
-    # --- 1. CORE & ADMIN HANDLERS ---
+    # --- 1. CORE & ADMIN ---
     app_bot.add_handler(CommandHandler("start", start.start))
     app_bot.add_handler(CommandHandler("ping", ping.ping))
     app_bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
 
-    # --- 2. ECONOMY & RANKING ---
+    # --- 2. ECONOMY & GLOBAL RANKING ---
     app_bot.add_handler(CommandHandler("bal", economy.balance))
     app_bot.add_handler(CommandHandler("daily", daily.daily_reward))
     app_bot.add_handler(CommandHandler("top", economy.top_users))
@@ -107,30 +104,27 @@ if __name__ == '__main__':
     app_bot.add_handler(CommandHandler("shop", shop.shop_menu))
     app_bot.add_handler(CallbackQueryHandler(shop.shop_callback, pattern="^shop_"))
 
-    # --- 3. PREMIUM, BREAKUP & JEALOUS MODES ---
+    # --- 3. MOODS & PREMIUM MODES ---
     app_bot.add_handler(CommandHandler("premium", premium.premium_menu))
     app_bot.add_handler(CommandHandler("apply_premium", premium.apply_premium))
     app_bot.add_handler(CallbackQueryHandler(premium.premium_callback, pattern="^prem_"))
-    app_bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
+    app_bot.add_handler(CommandHandler("flirtmode", flirt_mode.flirt_toggle))
     app_bot.add_handler(CommandHandler("jealous", jealous.jealous_toggle))
+    app_bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
 
-    # --- 4. EXCLUSIVE VIP ACTIONS ---
+    # --- 4. LOVE, MARRIAGE & FUN ---
+    app_bot.add_handler(CommandHandler("match", love_match.love_match))
+    app_bot.add_handler(CommandHandler("marry", marriage.marry))
+    app_bot.add_handler(CommandHandler("accept_shadi", marriage.accept_shadi))
     app_bot.add_handler(CommandHandler(["hug", "kiss", "flirt"], exclusive.premium_action))
 
     # --- 5. BATTLE SYSTEM (1v1 & 2v2) ---
     app_bot.add_handler(CommandHandler("battle", couple_battle.couple_battle))
     app_bot.add_handler(CommandHandler("multibattle", couple_battle.multi_battle))
-    app_bot.add_handler(CommandHandler("battlelb", couple_battle.battle_lb))
 
-    # --- 6. COUPLE ROOM & GAMES ---
-    app_bot.add_handler(CommandHandler("propose", couple_room.propose))
-    app_bot.add_handler(CommandHandler("accept", couple_room.accept_proposal))
-    app_bot.add_handler(CommandHandler("couplestatus", couple_room.couple_status))
-    app_bot.add_handler(CommandHandler(["truth", "dare"], couple_games.truth_dare))
-
-    # --- 7. AUTO-HANDLERS (Priority Wise) ---
+    # --- 6. AUTO HANDLERS (Priority Management) ---
     
-    # Priority 1: Wishes (GM/GN/Hello) - Group 3
+    # Priority 1: Wishes (GM/GN/Festival) - Group 3
     app_bot.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, wishes.wish_handler),
         group=3
@@ -145,5 +139,5 @@ if __name__ == '__main__':
         group=4
     )
 
-    print(f"🚀 {BOT_NAME} is Live with Multi-Couple Battles & Global Economy!")
+    print(f"🚀 {BOT_NAME} is Online with Everything Integrated!")
     app_bot.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
