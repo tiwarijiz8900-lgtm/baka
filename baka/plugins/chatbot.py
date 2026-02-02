@@ -1,18 +1,18 @@
 import os
-import httpx
 import random
+import httpx
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ChatAction
+from baka.config import GROQ_API_KEY, GROQ_URL, AI_MODEL
 
 # ======================================================
-# 🔥 SIMBAVY SETTINGS (FAST & UNLIMITED)
+# 🔥 SETTINGS
 # ======================================================
 
-SIMBAVY_API_URL = "https://api.simbavy.xyz/api/chat?message="
 CHAT_ALWAYS_ON = True
 
-# Angel replies (randomly pick karega jab koi 'angel' bolega)
+# Angel ki sweet lines
 ANGEL_REPLIES = [
     "Ji meri jaan, bolo? 😘",
     "Angel hamesha tumhare saath hai baby.. ❤️",
@@ -21,42 +21,48 @@ ANGEL_REPLIES = [
 ]
 
 # ======================================================
-# 🔥 COMMANDS
+# 🔥 FAST & SHORT AI LOGIC
 # ======================================================
 
-async def chaton(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global CHAT_ALWAYS_ON
-    CHAT_ALWAYS_ON = True
-    await update.message.reply_text("✅ Chatbot ON! Ab har message ka reply milega 😘")
+async def get_groq_response(text: str, user_name: str):
+    """Short and sweet AI reply logic."""
+    if not GROQ_API_KEY:
+        return f"{user_name} jaan, admin ne AI key nahi lagayi 😭"
 
-async def chatoff(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    global CHAT_ALWAYS_ON
-    CHAT_ALWAYS_ON = False
-    await update.message.reply_text("❌ Chatbot OFF! 😴")
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # AI Instruction: Short reply + Hinglish
+    payload = {
+        "model": AI_MODEL,
+        "messages": [
+            {
+                "role": "system", 
+                "content": f"Your name is Angel. You are talking to {user_name}. Keep your replies very short (max 15-20 words). Speak in sweet romantic Hinglish. Use emojis."
+            },
+            {"role": "user", "content": text}
+        ],
+        "max_tokens": 50, # Isse reply chhota aur fast aayega
+        "temperature": 0.8
+    }
 
-# ======================================================
-# 🔥 SIMBAVY API LOGIC
-# ======================================================
-
-async def get_simbavy_response(text: str):
     try:
-        # API call with timeout
         async with httpx.AsyncClient(timeout=10) as client:
-            response = await client.get(f"{SIMBAVY_API_URL}{text}")
+            response = await client.post(GROQ_URL, headers=headers, json=payload)
             if response.status_code == 200:
-                data = response.json()
-                # 'result' field se text nikalna
-                reply = data.get("result", "Mujhe samajh nahi aaya baby.")
-                return reply
-            return "Net slow hai baby 😭"
+                return response.json()['choices'][0]['message']['content']
+            return f"Thoda busy hoon {user_name}.. 😴"
     except Exception:
-        return "Server busy hai, thoda ruko 😴"
+        return f"Net slow hai {user_name} baby 😭"
 
 # ======================================================
-# 🔥 MAIN AUTO REPLY (EVERY MESSAGE)
+# 🔥 MAIN AUTO REPLY (PRIVATE & GROUP)
 # ======================================================
 
 async def ai_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Handles unlimited auto replies with Name tagging."""
     if not CHAT_ALWAYS_ON:
         return
 
@@ -64,35 +70,37 @@ async def ai_message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if not msg or not msg.text or msg.text.startswith("/"):
         return
 
+    # User ka First Name nikalna
+    user_name = msg.from_user.first_name
     incoming_text = msg.text.lower()
-    name = msg.from_user.first_name
 
-    # Typing action dikhane ke liye
+    # Typing action start
     await context.bot.send_chat_action(msg.chat.id, ChatAction.TYPING)
 
-    # API response lena
-    api_reply = await get_simbavy_response(msg.text)
+    # Groq AI se reply lena
+    api_reply = await get_groq_response(msg.text, user_name)
 
-    # Angel Logic + Normal Response
+    # Angel Logic: Agar message mein 'angel' ho
     if "angel" in incoming_text:
         special_msg = random.choice(ANGEL_REPLIES)
-        # Seedha saadha text, no style
-        final_text = f"{special_msg}\n\n{api_reply}"
+        final_text = f"✨ **{user_name}** {special_msg}\n\n{api_reply}"
     else:
-        # Normal chota message
-        final_text = api_reply
+        # Normal Reply with Name shuruat mein
+        final_text = f"🌸 **{user_name}**, {api_reply}"
 
-    # Har message pe fast unlimited reply
-    await msg.reply_text(final_text)
+    # Fast Reply
+    await msg.reply_text(final_text, parse_mode="Markdown")
 
 # ======================================================
-# 🔥 /ask COMMAND
+# 🔥 COMMANDS
 # ======================================================
 
-async def ask_ai(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not context.args:
-        return await update.message.reply_text("Baby kuch toh pucho 😚")
+async def chaton(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global CHAT_ALWAYS_ON
+    CHAT_ALWAYS_ON = True
+    await update.message.reply_text("✅ Angel Auto-Chat ON! 😘")
 
-    text = " ".join(context.args)
-    res = await get_simbavy_response(text)
-    await update.message.reply_text(res)
+async def chatoff(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    global CHAT_ALWAYS_ON
+    CHAT_ALWAYS_ON = False
+    await update.message.reply_text("❌ Angel Auto-Chat OFF! 😴")
