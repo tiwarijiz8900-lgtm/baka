@@ -1,90 +1,59 @@
 import random
 from telegram import Update
 from telegram.ext import ContextTypes
-from telegram.constants import ParseMode
-
-# ✅ SAME SambaNova AI function
-from baka.plugins.chatbot import ask_ai_raw
-
 
 # ======================================================
-# 💑 AI GENERATOR
+# 🔥 UNLIMITED DATA (Inhe aap jitna chahe bada sakte hain)
 # ======================================================
 
-async def generate(prompt: str):
+TRUTHS = [
+    "Kya tumne kabhi kisi se flirt karne ke liye jhoot bola hai? 😉",
+    "Tumhari sabse badi insecurity kya hai? 🙈",
+    "Kya tum abhi bhi apne ex ke baare mein sochte ho? 🤫",
+    "Tumne kabhi kisi ko galat message bhej kar delete kiya hai? 😂",
+    "Agar tumhe mujhse ek sach chhupana ho, toh wo kya hoga? 😇",
+    "Kya tumne kabhi kisi ki profile stalk ki hai? 📱",
+    "Tumhe mujh mein sabse buri aadat kya lagti hai? 🙊",
+    "Pehli nazar ka pyaar ya pehli nazar ka dhoka? 💘",
+    "Tumne kabhi kisi ke saath screen sharing mein galti ki hai? 🖥️",
+    "Tumhara sabse bada 'guilty pleasure' kya hai? 🍫"
+]
 
-    system = (
-        "You are a fun Indian couple game generator. "
-        "Generate very short Hinglish content. "
-        "Romantic + funny + flirty. "
-        "Max 1-2 lines only."
-    )
+DARES = [
+    "Apne partner ko 'I Love You' bolo voice note mein! 🎙️",
+    "Apne phone ka last screenshot group mein bhejo! 📸",
+    "Kisi ko bhi randomly 'I miss you' message karo aur screenshot dikhao! 🔥",
+    "Agli 2 minute tak sirf emoji mein baat karo 😶",
+    "Apne bio mein likho 'Angel's Property' 😇",
+    "Group mein ek romantic gaana gao! 🎵",
+    "Apne crush ka naam bina sharmaye batao! 😍",
+    "Ek selfie bhejo abhi bina filter ke! 🤳",
+    "Apne status pe likho 'Main Pagal Hoon' aur 5 min rehne do! 🤪"
+]
 
-    return await ask_ai_raw(system, prompt, 60)
-
+QUIZZES = [
+    {"q": "Sacha pyaar kitni baar hota hai?", "a": "Sirf ek baar... ya shayad har baar? 😉"},
+    {"q": "Relationship mein trust zyada bada hai ya respect?", "a": "Dono hi barabar hain! ❤️"},
+    {"q": "Ek perfect date kahan honi chahiye?", "a": "Coffee, Dinner ya Long drive? 🕯️"},
+    {"q": "Kya break-up ke baad dosti ho sakti hai?", "a": "Ye toh dil pe depend karta hai! 💔"},
+    {"q": "Ladkiyon ko sabse zyada kya pasand hai?", "a": "Care, Time aur Attention! ✨"}
+]
 
 # ======================================================
-# 💗 TRUTH (UNLIMITED)
+# 🎮 LOGIC: JO HAR BAAR CHANGE HOTA RAHE
 # ======================================================
 
 async def truth(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    q = await generate("Give one funny truth question for couples.")
-
-    if not q:
-        q = "Secret crush ka naam batao 😏"
-
-    await update.message.reply_text(
-        f"💗 <b>TRUTH TIME</b>\n\n{q}",
-        parse_mode=ParseMode.HTML
-    )
-
-
-# ======================================================
-# 🔥 DARE (UNLIMITED)
-# ======================================================
+    # random.sample use karne se repetition kam hoti hai
+    question = random.choice(TRUTHS)
+    name = update.effective_user.first_name
+    await update.message.reply_text(f"✨ **TRUTH FOR {name}** ✨\n\n{question}\n\nJhoot mat bolna, Angel sab dekh rahi hai! 😉")
 
 async def dare(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    d = await generate("Give one romantic or funny dare task.")
-
-    if not d:
-        d = "Group me kisi ko I love you bolo ❤️"
-
-    await update.message.reply_text(
-        f"🔥 <b>DARE TIME</b>\n\n{d}",
-        parse_mode=ParseMode.HTML
-    )
-
-
-# ======================================================
-# 🧠 QUIZ (UNLIMITED)
-# ======================================================
+    task = random.choice(DARES)
+    name = update.effective_user.first_name
+    await update.message.reply_text(f"🔥 **DARE FOR {name}** 🔥\n\n{task}\n\nPure nahi kiya toh Angel naraz ho jayegi! 😘")
 
 async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    q = await generate("Create one love quiz with answer included.")
-
-    if not q:
-        q = "Love ka opposite?\nA) Hate\nB) Care\nAnswer: A"
-
-    await update.message.reply_text(
-        f"🧠 <b>LOVE QUIZ</b>\n\n{q}",
-        parse_mode=ParseMode.HTML
-    )
-
-
-# ======================================================
-# 💑 RANDOM GAME (TRUTH/DARE/QUIZ auto mix)
-# ======================================================
-
-async def couplegame(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    choice = random.choice(["truth", "dare", "quiz"])
-
-    if choice == "truth":
-        await truth(update, context)
-    elif choice == "dare":
-        await dare(update, context)
-    else:
-        await quiz(update, context)
+    item = random.choice(QUIZZES)
+    await update.message.reply_text(f"🧠 **LOVE QUIZ** 🧠\n\nSawal: {item['q']}\n\nAngel tumhara jawab sunna chahti hai! ❤️")
