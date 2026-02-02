@@ -1,7 +1,6 @@
 import os
 import logging
 import asyncio
-import platform
 from threading import Thread
 from flask import Flask
 from telegram import Update
@@ -11,16 +10,10 @@ from telegram.ext import (
 )
 from telegram.request import HTTPXRequest
 
-# ======================================================
-# 🛠️ SYSTEM SETUP & LOGGING
-# ======================================================
+# --- LOGGING ---
 logging.basicConfig(level=logging.INFO)
-if platform.system() == 'Windows':
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
-# ======================================================
-# 🧩 ALL PLUGINS IMPORT (As per your Screenshot)
-# ======================================================
+# --- PLUGINS IMPORT ---
 from baka.config import TOKEN, PORT
 from baka.plugins import (
     admin, ai_media, antispam, breakup, broadcast, chatbot, 
@@ -30,95 +23,78 @@ from baka.plugins import (
     riddle, shop, social, start, waifu, welcome, wishes
 )
 
-# ======================================================
-# FLASK SERVER FOR HEROKU
-# ======================================================
+# --- WEB SERVER FOR HEROKU ---
 app = Flask(__name__)
 @app.route('/')
-def health(): return "✨ Angel Master is Live on Heroku!"! 🚀"
+def health(): return "✨ Angel Master Economy System is Online! 🚀"
 
 def run_flask():
-    # Heroku PORT dynamically pick karta hai
     app.run(host='0.0.0.0', port=PORT)
 
-# ======================================================
-# 📜 AUTOMATIC COMMAND MENU (BotFather Ready)
-# ======================================================
+# --- BOT COMMANDS SETTING ---
 async def post_init(application):
     await application.bot.set_my_commands([
-        ("start", "🌸 Start Bot"),
-        ("help", "📜 Help Menu"),
-        ("bal", "👛 Check Balance"),
-        ("marry", "💍 Propose Marriage"),
-        ("match", "❤️ Love Match"),
-        ("rob", "💰 Rob a Bank"),
-        ("battle", "⚔️ Couple Battle"),
+        ("register", "🔑 Create Wallet"),
+        ("bal", "👛 Wallet & Profile"),
+        ("give", "💸 Send Coins to Friend"),
+        ("top", "🏆 Leaderboard"),
+        ("claim", "💎 Group Bonus"),
+        ("marry", "💍 Propose"),
+        ("rob", "💰 Bank Robbery"),
         ("shop", "🛒 Item Shop"),
-        ("daily", "📅 Claim Daily"),
-        ("waifu", "👗 Get Waifu"),
-        ("ban", "🚀 Ban (Admin)"),
-        ("ping", "📶 Speed Check")
+        ("help", "📜 Help Menu")
     ])
 
-# ======================================================
-# ⚙️ MAIN ENGINE & HANDLERS
-# ======================================================
 if __name__ == '__main__':
-    # Flask in background
     Thread(target=run_flask, daemon=True).start()
 
-    # Build Application
-    t_request = HTTPXRequest(connection_pool_size=30)
+    # Application Build
     app_bot = (
         ApplicationBuilder()
         .token(TOKEN)
-        .request(t_request)
+        .request(HTTPXRequest(connection_pool_size=30))
         .post_init(post_init)
         .build()
     )
 
-    # --- 1. CORE & ADMIN HANDLERS ---
+    # --- 1. CORE & START ---
     app_bot.add_handler(CommandHandler("start", start.start))
-    app_bot.add_handler(CommandHandler("ping", ping.ping))
-    app_bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
-    app_bot.add_handler(CommandHandler(["ban", "mute", "unmute"], [moderation.ban_user, moderation.mute_user, moderation.unmute_user]))
-    app_bot.add_handler(MessageHandler(filters.Entity("url"), antispam.link_guard), group=1)
+    app_bot.add_handler(CommandHandler("help", start.start)) # Using start as help placeholder
 
-    # --- 2. ECONOMY & SHOP HANDLERS ---
-    app_bot.add_handler(CommandHandler(["bal", "profile"], economy.balance))
-    app_bot.add_handler(CommandHandler("daily", daily.daily_reward))
-    app_bot.add_handler(CommandHandler("shop", shop.shop_menu))
-    app_bot.add_handler(CommandHandler("collection", collection.show_collection))
-    app_bot.add_handler(CommandHandler("top", economy.top_users))
+    # --- 2. ECONOMY SYSTEM (As per your code) ---
+    app_bot.add_handler(CommandHandler("register", economy.register))
+    app_bot.add_handler(CommandHandler("claim", economy.claim))
+    app_bot.add_handler(CommandHandler(["bal", "balance", "profile"], economy.balance))
+    app_bot.add_handler(CommandHandler(["top", "ranking"], economy.ranking))
+    app_bot.add_handler(CommandHandler(["give", "pay"], economy.give))
+    
+    # Callback for Inventory View
+    app_bot.add_handler(CallbackQueryHandler(economy.inventory_callback, pattern="^inv_view\|"))
 
-    # --- 3. MAFIA & GAMES HANDLERS ---
-    app_bot.add_handler(CommandHandler(["rob", "attack"], [mafia.rob_bank, mafia.attack_gang]))
+    # --- 3. MAFIA & CRIME ---
+    app_bot.add_handler(CommandHandler("rob", mafia.rob_bank))
     app_bot.add_handler(CommandHandler("creategang", mafia.create_gang))
-    app_bot.add_handler(CommandHandler("battle", couple_battle.couple_battle))
-    app_bot.add_handler(CommandHandler("games", couple_games.games_menu))
-    app_bot.add_handler(CommandHandler("waifu", waifu.get_waifu))
-    app_bot.add_handler(CommandHandler("riddle", riddle.get_riddle))
+    app_bot.add_handler(CommandHandler("attack", mafia.attack_gang))
 
-    # --- 4. LOVE & MARRIAGE HANDLERS ---
+    # --- 4. LOVE & MARRIAGE ---
     app_bot.add_handler(CommandHandler("marry", marriage.marry))
     app_bot.add_handler(CommandHandler("accept_shadi", marriage.accept_shadi))
     app_bot.add_handler(CommandHandler("match", love_match.love_match))
-    app_bot.add_handler(CommandHandler(["hug", "kiss", "slap", "lick"], exclusive.premium_action))
 
-    # --- 5. MODES & EMOTIONAL AI ---
-    app_bot.add_handler(CommandHandler("flirtmode", flirt_mode.flirt_toggle))
-    app_bot.add_handler(CommandHandler("jealous", jealous.jealous_toggle))
-    app_bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
+    # --- 5. GAMES & FUN ---
+    app_bot.add_handler(CommandHandler("battle", couple_battle.couple_battle))
+    app_bot.add_handler(CommandHandler("waifu", waifu.get_waifu))
+    app_bot.add_handler(CommandHandler("riddle", riddle.get_riddle))
+    app_bot.add_handler(CommandHandler("shop", shop.shop_menu))
 
-    # --- 6. AUTO HANDLERS (Wishes & Chatbot) ---
+    # --- 6. SECURITY & ADMIN ---
+    app_bot.add_handler(CommandHandler("ban", moderation.ban_user))
+    app_bot.add_handler(CommandHandler("mute", moderation.mute_user))
+    app_bot.add_handler(MessageHandler(filters.Entity("url"), antispam.link_guard), group=1)
+
+    # --- 7. AUTO HANDLERS ---
     app_bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, wishes.wish_handler), group=3)
-    app_bot.add_handler(
-        MessageHandler((filters.TEXT | filters.Sticker.ALL) & ~filters.COMMAND, chatbot.ai_message_handler), 
-        group=4
-    )
+    app_bot.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, chatbot.ai_message_handler), group=4)
 
-    # --- 7. CALLBACKS (For Buttons) ---
-    app_bot.add_handler(CallbackQueryHandler(premium.callback_handler))
-
-    print("🚀 ANGEL MASTER ENGINE: FULLY LOADED & READY!")
+    print("🚀 ANGEL MASTER BOT START SUCCESSFULLY!")
     app_bot.run_polling(drop_pending_updates=True)
