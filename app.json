@@ -1,23 +1,25 @@
 {
   "name": "RyanBaka Bot",
-  "description": "The Ultimate Aesthetic Telegram Economy & Game Bot.",
-  "logo": "https://telegra.ph/file/5e5480760e412bd402e88.jpg",
+  "description": "The Ultimate Aesthetic Telegram Economy & Game Bot with Premium UPI System.",
+  "logo": "https://files.catbox.moe/wx05mx.jpg",
   "keywords": [
-    "telegram", "bot", "python", "economy", "game", "ai"
+    "telegram", "bot", "python", "economy", "game", "ai", "upi"
   ],
-  "repository": "https://github.com/YourUsername/RyanBakaBot",
+  "repository": "https://github.com/tiwarijiz8900-lgtm/baka",
   "env": {
-    "BOT_TOKEN": { "description": "Telegram Bot Token", "required": true },
+    "BOT_TOKEN": { "description": "Telegram Bot Token from @BotFather", "required": true },
     "MONGO_URI": { "description": "MongoDB Connection String", "required": true },
-    "OWNER_ID": { "description": "Your User ID", "required": true },
-    "MISTRAL_API_KEY": { "description": "Mistral AI Key", "required": false },
-    "LOGGER_ID": { "description": "Log Channel ID", "required": false },
-    "START_IMG_URL": { "description": "Start Image URL", "required": false },
-    "SUPPORT_GROUP": { "description": "Support Link", "required": false },
-    "SUPPORT_CHANNEL": { "description": "Updates Link", "required": false },
-    "OWNER_LINK": { "description": "Owner Link", "required": false },
-    "UPSTREAM_REPO": { "description": "Git Repo URL", "required": false },
-    "GIT_TOKEN": { "description": "Git Token", "required": false },
+    "OWNER_ID": { "description": "Your Telegram User ID", "required": true },
+    "GROQ_API_KEY": { "description": "Free Groq AI Key from console.groq.com", "required": true },
+    "UPI_ID": { "description": "Your UPI ID for payments (e.g. name@upi)", "required": true, "value": "ll_WTF_SHEZADA_ll@upi" },
+    "UPI_QR_IMAGE": { "description": "Direct link to your UPI QR Image", "required": true, "value": "https://files.catbox.moe/wx05mx.jpg" },
+    "LOGGER_ID": { "description": "Log Channel ID", "required": false, "value": "-1003605595874" },
+    "START_IMG_URL": { "description": "Start Image URL", "required": false, "value": "https://files.catbox.moe/wx05mx.jpg" },
+    "SUPPORT_GROUP": { "description": "Support Link", "required": false, "value": "https://t.me/Love_Ki_Duniyaa" },
+    "SUPPORT_CHANNEL": { "description": "Updates Link", "required": false, "value": "https://t.me/Love_Bot_143" },
+    "OWNER_LINK": { "description": "Owner Link", "required": false, "value": "https://t.me/ll_WTF_SHEZADA_ll" },
+    "UPSTREAM_REPO": { "description": "Git Repo URL", "required": false, "value": "https://github.com/tiwarijiz8900-lgtm/baka" },
+    "GIT_TOKEN": { "description": "Git Token for private repos", "required": false },
     "GIT_PYTHON_REFRESH": { "value": "quiet", "required": true }
   },
   "buildpacks": [
@@ -28,5 +30,10 @@
       "url": "heroku/python"
     }
   ],
-  "stack": "container"
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "eco"
+    }
+  }
 }
