@@ -26,62 +26,59 @@ if platform.system() == 'Windows':
 # ======================================================
 # 🧩 PLUGINS IMPORTS
 # ======================================================
+# Ensure these files exist in your baka/plugins/ folder
 from baka.config import TOKEN, PORT
-from baka.utils import log_to_channel, BOT_NAME
-
 from baka.plugins import (
-    start, economy, game, admin, broadcast, ping, chatbot, 
-    daily, couple_games, wishes, couple_battle, couple_room, 
-    premium, exclusive, shop, breakup, jealous, flirt_mode,
-    love_match, marriage
+    start, economy, admin, broadcast, ping, chatbot, 
+    daily, wishes, couple_battle, premium, exclusive, 
+    breakup, jealous, flirt_mode, love_match, marriage, 
+    mafia, antispam, moderation
 )
 
 # ======================================================
-# 🌐 FLASK WEB SERVER (24/7 Hosting)
+# 🌐 FLASK WEB SERVER (For 24/7 Hosting)
 # ======================================================
 app = Flask(__name__)
 
 @app.route('/')
 def health():
-    return f"✨ {BOT_NAME} Global Master Engine is Live! 🚀"
+    return "✨ Angel Master Ultimate System is Online & Secured! 🛡️"
 
 def run_flask():
     app.run(host='0.0.0.0', port=PORT, debug=False, use_reloader=False)
 
 # ======================================================
-# 📜 BOT MENU & COMMANDS SETUP
+# 📜 BOT MENU & COMMANDS
 # ======================================================
 async def post_init(application):
     await application.bot.set_my_commands([
         ("start", "🌸 Start Angel"),
-        ("bal", "👛 Wallet/Balance"),
-        ("daily", "📅 Daily Coins"),
-        ("premium", "💎 VIP Plans"),
+        ("bal", "👛 Check Coins"),
+        ("daily", "📅 Claim Daily Coins"),
         ("match", "❤️ Dil Match %"),
         ("marry", "💍 Propose Marriage"),
-        ("battle", "⚔️ 1v1 Battle"),
-        ("multibattle", "⚔️ 2v2 Couple Battle"),
+        ("rob", "💰 Rob a Bank"),
+        ("attack", "⚔️ Attack Gang Vault"),
+        ("ban", "🚀 Ban User (Admin Only)"),
+        ("mute", "🤫 Mute User (Admin Only)"),
         ("flirtmode", "😘 Toggle Flirt AI"),
         ("jealous", "🤨 Toggle Jealousy"),
         ("breakup", "💔 Toggle Breakup"),
-        ("hug", "🫂 VIP Hug"),
-        ("kiss", "💋 VIP Kiss"),
         ("top", "🏆 Global Ranking"),
-        ("ping", "📶 Speed Check")
+        ("ping", "📶 Bot Speed Check")
     ])
-    print(f"✅ {BOT_NAME} Master System Operational!")
+    print("✅ All System Commands Registered!")
 
 # ======================================================
-# ⚙️ MAIN BOT ENGINE
+# ⚙️ MAIN ENGINE START
 # ======================================================
 if __name__ == '__main__':
 
-    # Start Flask Web Server in Background
+    # Start Flask in background
     Thread(target=run_flask, daemon=True).start()
 
-    # High-Performance Request Setup
+    # Build Application
     t_request = HTTPXRequest(connection_pool_size=30, connect_timeout=60)
-
     app_bot = (
         ApplicationBuilder()
         .token(TOKEN)
@@ -90,47 +87,47 @@ if __name__ == '__main__':
         .build()
     )
 
-    # --- 1. CORE & ADMIN ---
-    app_bot.add_handler(CommandHandler("start", start.start))
-    app_bot.add_handler(CommandHandler("ping", ping.ping))
-    app_bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
+    # --- 1. SECURITY & MODERATION (High Priority) ---
+    # Anti-Link Guard (Group 1)
+    app_bot.add_handler(
+        MessageHandler(filters.Entity("url") | filters.Entity("text_link"), antispam.link_guard), 
+        group=1
+    )
+    # Admin Commands
+    app_bot.add_handler(CommandHandler("ban", moderation.ban_user))
+    app_bot.add_handler(CommandHandler("mute", moderation.mute_user))
+    app_bot.add_handler(CommandHandler("unmute", moderation.unmute_user))
 
-    # --- 2. ECONOMY & GLOBAL RANKING ---
-    app_bot.add_handler(CommandHandler("bal", economy.balance))
+    # --- 2. ECONOMY & MAFIA SYSTEM ---
+    app_bot.add_handler(CommandHandler(["bal", "top"], economy.balance))
     app_bot.add_handler(CommandHandler("daily", daily.daily_reward))
-    app_bot.add_handler(CommandHandler("top", economy.top_users))
-    app_bot.add_handler(CommandHandler("pay", economy.pay))
-    app_bot.add_handler(CommandHandler("gamble", game.gamble))
-    app_bot.add_handler(CommandHandler("shop", shop.shop_menu))
-    app_bot.add_handler(CallbackQueryHandler(shop.shop_callback, pattern="^shop_"))
+    app_bot.add_handler(CommandHandler("rob", mafia.rob_bank))
+    app_bot.add_handler(CommandHandler("creategang", mafia.create_gang))
+    app_bot.add_handler(CommandHandler("attack", mafia.attack_gang))
 
-    # --- 3. MOODS & PREMIUM MODES ---
-    app_bot.add_handler(CommandHandler("premium", premium.premium_menu))
-    app_bot.add_handler(CommandHandler("apply_premium", premium.apply_premium))
-    app_bot.add_handler(CallbackQueryHandler(premium.premium_callback, pattern="^prem_"))
-    app_bot.add_handler(CommandHandler("flirtmode", flirt_mode.flirt_toggle))
-    app_bot.add_handler(CommandHandler("jealous", jealous.jealous_toggle))
-    app_bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
-
-    # --- 4. LOVE, MARRIAGE & FUN ---
+    # --- 3. LOVE, MARRIAGE & FUN ---
     app_bot.add_handler(CommandHandler("match", love_match.love_match))
     app_bot.add_handler(CommandHandler("marry", marriage.marry))
     app_bot.add_handler(CommandHandler("accept_shadi", marriage.accept_shadi))
     app_bot.add_handler(CommandHandler(["hug", "kiss", "flirt"], exclusive.premium_action))
 
-    # --- 5. BATTLE SYSTEM (1v1 & 2v2) ---
-    app_bot.add_handler(CommandHandler("battle", couple_battle.couple_battle))
-    app_bot.add_handler(CommandHandler("multibattle", couple_battle.multi_battle))
+    # --- 4. EMOTIONAL MODES ---
+    app_bot.add_handler(CommandHandler("flirtmode", flirt_mode.flirt_toggle))
+    app_bot.add_handler(CommandHandler("jealous", jealous.jealous_toggle))
+    app_bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
+
+    # --- 5. UTILITY & CORE ---
+    app_bot.add_handler(CommandHandler("start", start.start))
+    app_bot.add_handler(CommandHandler("ping", ping.ping))
+    app_bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
 
     # --- 6. AUTO HANDLERS (Priority Management) ---
-    
-    # Priority 1: Wishes (GM/GN/Festival) - Group 3
+    # Priority 1: Auto-Wishes (Group 3)
     app_bot.add_handler(
         MessageHandler(filters.TEXT & ~filters.COMMAND, wishes.wish_handler),
         group=3
     )
-    
-    # Priority 2: AI Chatbot & Stickers - Group 4
+    # Priority 2: AI Chatbot (Group 4)
     app_bot.add_handler(
         MessageHandler(
             (filters.TEXT | filters.Sticker.ALL) & ~filters.COMMAND,
@@ -139,5 +136,5 @@ if __name__ == '__main__':
         group=4
     )
 
-    print(f"🚀 {BOT_NAME} is Online with Everything Integrated!")
-    app_bot.run_polling(drop_pending_updates=True, allowed_updates=Update.ALL_TYPES)
+    print("🚀 Baka Angel MASTER ENGINE is Live! (2026 Edition)")
+    app_bot.run_polling(drop_pending_updates=True)
