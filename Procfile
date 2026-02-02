@@ -1,1 +1,1 @@
-web: gunicorn Ryan:app
+worker
