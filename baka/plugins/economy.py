@@ -1,5 +1,6 @@
 # Copyright (c) 2026 Telegram:- @WTF_Phantom <DevixOP>
-# Updated by Gemini AI for Groq Integration
+# Location: Supaul, Bihar 
+# All rights reserved. Fixes by Gemini AI.
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
@@ -10,6 +11,11 @@ from baka.database import users_collection, groups_collection
 
 # --- FIX: IMPORT GROQ INSTEAD OF MISTRAL ---
 from baka.plugins.chatbot import get_groq_response 
+
+# --- IMPORT ERROR FIX FOR COUPLE_BATTLE ---
+async def get_balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Wrapper for balance command to fix ImportErrors in other plugins."""
+    return await balance(update, context)
 
 # --- INVENTORY CALLBACK ---
 async def inventory_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -76,7 +82,7 @@ async def claim(update: Update, context: ContextTypes.DEFAULT_TYPE):
     track_group(chat, user)
     
     group_doc = groups_collection.find_one({"chat_id": chat.id})
-    if group_doc.get("claimed"): 
+    if group_doc and group_doc.get("claimed"): 
         return await update.message.reply_text("❌ <b>Too late!</b> This group bonus has already been claimed.", parse_mode=ParseMode.HTML)
     
     try: 
@@ -86,7 +92,7 @@ async def claim(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     if count < MIN_CLAIM_MEMBERS:
         # --- FIX: USE GROQ FOR ROASTING ---
-        roast_prompt = f"Roast {user.first_name} funny and short for trying to claim a bonus in a group with only {count} members when {MIN_CLAIM_MEMBERS} are needed."
+        roast_prompt = f"Roast {user.first_name} in 10 words for claiming in a group with only {count} members. Be funny in Hinglish."
         roast = await get_groq_response(roast_prompt, user.first_name)
         
         return await update.message.reply_text(
@@ -113,7 +119,7 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
     elif not target: return await update.message.reply_text(error, parse_mode=ParseMode.HTML)
 
     rank = users_collection.count_documents({"balance": {"$gt": target["balance"]}}) + 1
-    status = "💖 Alive" if target['status'] == 'alive' else "💀 Dead"
+    status = "💖 Alive" if target.get('status') == 'alive' else "💀 Dead"
     
     inventory = target.get('inventory', [])
     weapons = [i for i in inventory if i['type'] == 'weapon']
@@ -141,7 +147,7 @@ async def balance(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"👛 <b>Balance:</b> <code>{format_money(target['balance'])}</code>\n"
         f"🏆 <b>Rank:</b> <code>#{rank}</code>\n"
         f"❤️ <b>Status:</b> {status}\n"
-        f"⚔️ <b>Kills:</b> <code>{target['kills']}</code>\n\n"
+        f"⚔️ <b>Kills:</b> <code>{target.get('kills', 0)}</code>\n\n"
         f"🎒 <b>𝐀𝐜𝐭𝐢𝐯𝐞 𝐆𝐞𝐚𝐫:</b>\n"
         f"🗡️ <b>Weapon:</b> {w_text}\n"
         f"🛡️ <b>Armor:</b> {a_text}\n\n"
