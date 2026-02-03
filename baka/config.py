@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Telegram:- @WTF_Phantom <DevixOP>
+# Copyright (c) 2025 Telegram:- @WTF_Phantom
 
 import os
 import time
@@ -10,12 +10,20 @@ import time
 START_TIME = time.time()
 
 TOKEN = os.getenv("BOT_TOKEN")
-MONGO_URI = os.getenv("MONGO_URI")
-PORT = int(os.environ.get("PORT", 8080)) # Heroku standard port
+
+# ✅ Mongo (FIXED + backward compatible)
+MONGO_URI = os.getenv("MONGO_URI") or os.getenv("MONGO_DB_URI")
+
+# alias (old files ke liye safe)
+MONGO_DB_URI = MONGO_URI
+
+PORT = int(os.environ.get("PORT", 8080))
 
 
-# --- FAST GROQ AI (Mistral Fix) ---
-# Mistral ki jagah ab Groq use hoga jo super fast hai
+# ===============================
+# 🔥 GROQ AI SETTINGS
+# ===============================
+
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 AI_MODEL = "llama-3.1-70b-versatile"
@@ -25,10 +33,9 @@ AI_MODEL = "llama-3.1-70b-versatile"
 # 🔥 PREMIUM & UPI SETTINGS
 # ===============================
 
-UPI_ID = os.getenv("UPI_ID", "ll_WTF_SHEZADA_ll@upi") 
+UPI_ID = os.getenv("UPI_ID", "ll_WTF_SHEZADA_ll@upi")
 UPI_QR_IMAGE = os.getenv("UPI_QR_IMAGE", "https://files.catbox.moe/wx05mx.jpg")
 
-# Subscription Plans (INR)
 PLAN_1_MONTH = 99
 PLAN_1_YEAR = 899
 PLAN_LIFETIME = 1499
@@ -50,50 +57,21 @@ GIT_TOKEN = os.getenv("GIT_TOKEN", "")
 # 🔥 Images & Links
 # ===============================
 
-START_IMG_URL = os.getenv(
-    "START_IMG_URL",
-    "https://files.catbox.moe/wx05mx.jpg"
-)
+START_IMG_URL = os.getenv("START_IMG_URL", "https://files.catbox.moe/wx05mx.jpg")
+HELP_IMG_URL = os.getenv("HELP_IMG_URL", "https://files.catbox.moe/3r4ihh.jpg")
+WELCOME_IMG_URL = os.getenv("WELCOME_IMG_URL", "https://files.catbox.moe/wx05mx.jpg")
 
-HELP_IMG_URL = os.getenv(
-    "HELP_IMG_URL",
-    "https://files.catbox.moe/3r4ihh.jpg"
-)
-
-WELCOME_IMG_URL = os.getenv(
-    "WELCOME_IMG_URL",
-    "https://files.catbox.moe/wx05mx.jpg"
-)
-
-SUPPORT_GROUP = os.getenv(
-    "SUPPORT_GROUP",
-    "https://t.me/Love_Ki_Duniyaa"
-)
-
-SUPPORT_CHANNEL = os.getenv(
-    "SUPPORT_CHANNEL",
-    "https://t.me/Love_Bot_143"
-)
-
-OWNER_LINK = os.getenv(
-    "OWNER_LINK",
-    "https://t.me/ll_WTF_SHEZADA_ll"
-)
+SUPPORT_GROUP = os.getenv("SUPPORT_GROUP", "https://t.me/Love_Ki_Duniyaa")
+SUPPORT_CHANNEL = os.getenv("SUPPORT_CHANNEL", "https://t.me/Love_Bot_143")
+OWNER_LINK = os.getenv("OWNER_LINK", "https://t.me/ll_WTF_SHEZADA_ll")
 
 
 # ===============================
 # 🔥 IDs
 # ===============================
 
-try:
-    LOGGER_ID = int(os.getenv("LOGGER_ID", "1003605595874").strip())
-except:
-    LOGGER_ID = 0
-
-try:
-    OWNER_ID = int(os.getenv("OWNER_ID", "0").strip())
-except:
-    OWNER_ID = 0
+LOGGER_ID = int(os.getenv("LOGGER_ID", "0"))
+OWNER_ID = int(os.getenv("OWNER_ID", "0"))
 
 SUDO_IDS_STR = os.getenv("SUDO_IDS", "")
 
