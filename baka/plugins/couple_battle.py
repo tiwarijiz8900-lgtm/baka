@@ -3,23 +3,40 @@ import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
 from telegram.constants import ParseMode
-from motor.motor_asyncio import AsyncIOMotorClient # MongoDB ke liye
+from motor.motor_asyncio import AsyncIOMotorClient
 
-# ✅ ECONOMY & UTILS IMPORTS
+# ✅ IMPORTS
 from baka.plugins.economy import get_balance, update_balance
 from baka.utils import format_money, get_mention
-from baka.config import MONGO_DB_URI # Aapki config file se URI lega
+from baka.config import MONGO_URI
 
-# ✅ DIRECT DATABASE CONNECTION (Chitta)
-db_client = AsyncIOMotorClient(MONGO_DB_URI)
-db = db_client.Bot_8 # Database ka naam
-users_db = db.users   # Collection ka naam
 
-# Stats function isi file mein
+# ===============================
+# 🔥 SAFE DB CONNECTION
+# ===============================
+
+if not MONGO_URI:
+    raise RuntimeError("❌ MONGO_URI not set in Heroku Config Vars")
+
+db_client = AsyncIOMotorClient(MONGO_URI)
+
+db = db_client["bakabot_db"]   # better name
+users_db = db["users"]
+
+
+# ===============================
+# USER TRACKER
+# ===============================
+
 async def track_user(user_id):
     user = await users_db.find_one({"user_id": user_id})
+
     if not user:
-        await users_db.insert_one({"user_id": user_id})
+        await users_db.insert_one({
+            "user_id": user_id,
+            "battles": 0
+        })
+
 
 # =====================================
 # ⚔️ 1v1 BATTLE
@@ -29,7 +46,6 @@ async def start_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     message = update.effective_message
 
-    # 📈 User Count Stats
     await track_user(user.id)
 
     if not message.reply_to_message:
@@ -42,6 +58,7 @@ async def start_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await message.reply_text("❌ Khud se ladoge kya? 😂")
 
     fee = 200
+
     user_bal = await get_balance(user.id)
     enemy_bal = await get_balance(enemy.id)
 
@@ -49,6 +66,7 @@ async def start_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return await message.reply_text("💰 Coins kam hain!")
 
     msg = await message.reply_text(f"⚔️ {user.first_name} VS {enemy.first_name}...")
+
     await asyncio.sleep(2)
 
     winner = random.choice([user, enemy])
@@ -62,22 +80,23 @@ async def start_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode=ParseMode.HTML
     )
 
+
 # =====================================
 # 🔥 2v2 MULTI BATTLE
 # =====================================
 
 async def multi_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
+
     await track_user(user.id)
 
-    if len(context.args) < 3:
-        return await update.message.reply_text("⚔️ Format: /multibattle @p @e1 @e2")
-
     fee = 300
+
     if await get_balance(user.id) < fee:
         return await update.message.reply_text("💰 Coins nahi hain!")
 
     msg = await update.message.reply_text("🔥 Battle shuru... ⚡")
+
     await asyncio.sleep(3)
 
     if random.choice(["A", "B"]) == "A":
@@ -87,4 +106,4 @@ async def multi_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update_balance(user.id, -fee)
         res = "💀 TEAM B WON!"
 
-    await msg.edit_text(res, parse_mode=ParseMode.HTML)
+    await msg.edit_text(res)
