@@ -14,10 +14,8 @@ MONGO_URI = os.getenv("MONGO_URI")
 PORT = int(os.environ.get("PORT", 8080)) # Heroku standard port
 
 
-# ===============================
-# 🔥 FREE AI SYSTEM (Groq Cloud)
-# ===============================
-# Replace SambaNova with Groq for better speed
+# --- FAST GROQ AI (Mistral Fix) ---
+# Mistral ki jagah ab Groq use hoga jo super fast hai
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 AI_MODEL = "llama-3.1-70b-versatile"
