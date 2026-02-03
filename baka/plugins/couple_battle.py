@@ -2,11 +2,23 @@ import random
 import asyncio
 from telegram import Update
 from telegram.ext import ContextTypes
-from baka.plugins.economy import get_balance, update_balance
+from telegram.constants import ParseMode
+from baka.database import users_collection
+from baka.utils import format_money, get_mention
+
+# --- Helper Functions (Fixes ImportErrors) ---
+async def get_user_bal(user_id: int):
+    """Directly fetch balance from DB to avoid import loops."""
+    user = users_collection.find_one({"user_id": user_id})
+    return user.get("balance", 0) if user else 0
+
+async def update_user_bal(user_id: int, amount: int):
+    """Directly update balance in DB."""
+    users_collection.update_one({"user_id": user_id}, {"$inc": {"balance": amount}})
 
 # --- Battle Logic ---
-async def couple_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """1v1 Simple Battle"""
+async def start_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """1v1 Simple Battle (Fixes the function name from your Ryan.py)"""
     user = update.effective_user
     if not update.message.reply_to_message:
         return await update.message.reply_text("⚔️ Kisi dushman ke message pe reply karke use challenge karo!")
@@ -15,29 +27,35 @@ async def couple_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if user.id == enemy.id:
         return await update.message.reply_text("❌ Khud se hi ladoge kya? Pagal ho gaye ho! 😂")
 
-    # Coins Check
+    # Entry Fee
     fee = 200
-    user_bal = await get_balance(user.id)
+    user_bal = await get_user_bal(user.id)
+    enemy_bal = await get_user_bal(enemy.id)
+
     if user_bal < fee:
-        return await update.message.reply_text(f"💰 Battle ke liye {fee} coins chahiye, tumhare paas sirf {user_bal} hain!")
+        return await update.message.reply_text(f"💰 Battle ke liye {format_money(fee)} coins chahiye, tumhare paas sirf {format_money(user_bal)} hain!")
+    
+    if enemy_bal < fee:
+        return await update.message.reply_text(f"⚠️ Samne wale ke paas {format_money(fee)} coins nahi hain ladne ke liye!")
 
     # Animation
-    msg = await update.message.reply_text(f"⚔️ {user.first_name} VS {enemy.first_name}\n\nTalwaren nikal rahi hain... 🗡️")
+    msg = await update.message.reply_text(f"⚔️ {user.first_name} **VS** {enemy.first_name}\n\nTalwaren nikal rahi hain... 🗡️", parse_mode=ParseMode.MARKDOWN)
     await asyncio.sleep(2)
 
-    # Result
+    # Result Calculation
     winner = random.choice([user, enemy])
     loser = enemy if winner.id == user.id else user
     
-    prize = fee * 2
-    await update_balance(winner.id, prize)
-    await update_balance(loser.id, -fee)
+    prize = fee # Winner gets the fee from loser
+    await update_user_bal(winner.id, prize)
+    await update_user_bal(loser.id, -fee)
 
     await msg.edit_text(
         f"🏆 **BATTLE RESULT** 🏆\n\n"
-        f"🥇 Winner: {winner.first_name}\n"
-        f"💀 Loser: {loser.first_name}\n\n"
-        f"💰 {winner.first_name} ne {prize} coins jeet liye!"
+        f"🥇 **Winner:** {get_mention(winner)}\n"
+        f"💀 **Loser:** {get_mention(loser)}\n\n"
+        f"💰 {winner.first_name} ne {format_money(prize)} coins loot liye!",
+        parse_mode=ParseMode.HTML
     )
 
 async def multi_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -46,14 +64,14 @@ async def multi_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(context.args) < 3:
         return await update.message.reply_text(
             "⚔️ **2v2 Battle Format:**\n"
-            "`/multibattle @partner @enemy1 @enemy2`"
+            "`/multibattle @partner @enemy1 @enemy2`",
+            parse_mode=ParseMode.MARKDOWN
         )
 
-    # Entry Fee
     fee = 300 
-    user_bal = await get_balance(user.id)
+    user_bal = await get_user_bal(user.id)
     if user_bal < fee:
-        return await update.message.reply_text(f"💰 Mega Battle ke liye {fee} coins chahiye!")
+        return await update.message.reply_text(f"💰 Mega Battle ke liye {format_money(fee)} coins chahiye!")
 
     partner = context.args[0]
     enemy1 = context.args[1]
@@ -67,19 +85,13 @@ async def multi_battle(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     await asyncio.sleep(3)
 
-    # Result
     win_team = random.choice(["A", "B"])
     prize = fee * 2
 
     if win_team == "A":
-        await update_balance(user.id, prize)
-        result = f"🏆 **TEAM A JEET GAYI!** 🏆\n\n{user.first_name} aur {partner} ne maidan maar liya! 💰 Prize: {prize} coins!"
+        await update_user_bal(user.id, prize)
+        result = f"🏆 **TEAM A JEET GAYI!** 🏆\n\n{user.first_name} aur {partner} ne maidan maar liya! 💰 Prize: {format_money(prize)} coins!"
     else:
         result = f"💀 **TEAM B JEET GAYI!** 💀\n\n{enemy1} aur {enemy2} ne Team A ko dhool chata di! 🔥"
 
     await msg.edit_text(result)
-
-async def battle_lb(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Battle Leaderboard (Top Warriors)"""
-    # Isme aap top winners ki list show kar sakte hain MongoDB se fetch karke
-    await update.message.reply_text("🥇 **TOP WARRIORS** 🥇\n\nAbhi ranks calculate ho rahi hain... 📊")
