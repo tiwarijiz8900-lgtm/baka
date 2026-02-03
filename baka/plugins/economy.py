@@ -1,23 +1,5 @@
-# Copyright (c) 2025 Telegram:- @WTF_Phantom <DevixOP>
-# Location: Supaul, Bihar 
-#
-# All rights reserved.
-#
-# This code is the intellectual property of @WTF_Phantom.
-# You are not allowed to copy, modify, redistribute, or use this
-# code for commercial or personal projects without explicit permission.
-#
-# Allowed:
-# - Forking for personal learning
-# - Submitting improvements via pull requests
-#
-# Not Allowed:
-# - Claiming this code as your own
-# - Re-uploading without credit or permission
-# - Selling or using commercially
-#
-# Contact for permissions:
-# Email: king25258069@gmail.com
+# Copyright (c) 2026 Telegram:- @WTF_Phantom <DevixOP>
+# Updated by Gemini AI for Groq Integration
 
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import ContextTypes
@@ -25,7 +7,9 @@ from telegram.constants import ParseMode, ChatType
 from baka.config import REGISTER_BONUS, OWNER_ID, TAX_RATE, CLAIM_BONUS, MARRIED_TAX_RATE, SHOP_ITEMS, MIN_CLAIM_MEMBERS
 from baka.utils import ensure_user_exists, get_mention, format_money, resolve_target, log_to_channel, stylize_text, track_group
 from baka.database import users_collection, groups_collection
-from baka.plugins.chatbot import ask_mistral_raw
+
+# --- FIX: IMPORT GROQ INSTEAD OF MISTRAL ---
+from baka.plugins.chatbot import get_groq_response 
 
 # --- INVENTORY CALLBACK ---
 async def inventory_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -58,7 +42,6 @@ async def register(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     chat = update.effective_chat
     
-    # --- FIX: PM ONLY CHECK ---
     if chat.type != ChatType.PRIVATE:
         kb = InlineKeyboardMarkup([[InlineKeyboardButton("🚀 Register Here", url=f"https://t.me/{context.bot.username}?start=register")]])
         return await update.message.reply_text(
@@ -86,39 +69,33 @@ async def claim(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat = update.effective_chat
     user = update.effective_user
     
-    # --- FIX: GROUP ONLY CHECK ---
     if chat.type == ChatType.PRIVATE:
         return await update.message.reply_text("⚠️ <b>Baka!</b> This command is for Group Bonuses only.", parse_mode=ParseMode.HTML)
     
     ensure_user_exists(user)
-    
-    # Ensure group exists in DB (Fixes 'Not Working' issue)
     track_group(chat, user)
     
     group_doc = groups_collection.find_one({"chat_id": chat.id})
-    
     if group_doc.get("claimed"): 
         return await update.message.reply_text("❌ <b>Too late!</b> This group bonus has already been claimed.", parse_mode=ParseMode.HTML)
     
-    # Check Member Count
     try: 
         count = await context.bot.get_chat_member_count(chat.id)
     except: 
         return await update.message.reply_text("⚠️ I need <b>Admin Rights</b> to verify member count!", parse_mode=ParseMode.HTML)
 
     if count < MIN_CLAIM_MEMBERS:
-        # Generate Roast
-        roast = await ask_mistral_raw("Roaster", f"Roast {user.first_name} for claiming in a group with only {count} members. Needs {MIN_CLAIM_MEMBERS}.")
-        final_roast = roast if roast else "Itna sannaata kyu hai bhai? 😂"
+        # --- FIX: USE GROQ FOR ROASTING ---
+        roast_prompt = f"Roast {user.first_name} funny and short for trying to claim a bonus in a group with only {count} members when {MIN_CLAIM_MEMBERS} are needed."
+        roast = await get_groq_response(roast_prompt, user.first_name)
         
         return await update.message.reply_text(
             f"❌ <b>Claim Failed!</b>\n\n"
             f"📉 <b>Members:</b> {count}/{MIN_CLAIM_MEMBERS}\n"
-            f"🔥 <b>Roast:</b> <i>{stylize_text(final_roast)}</i>", 
+            f"🔥 <b>Roast:</b> <i>{stylize_text(roast)}</i>", 
             parse_mode=ParseMode.HTML
         )
     
-    # Process Claim
     users_collection.update_one({"user_id": user.id}, {"$inc": {"balance": CLAIM_BONUS}})
     groups_collection.update_one({"chat_id": chat.id}, {"$set": {"claimed": True}})
     
@@ -207,11 +184,10 @@ async def give(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if amount is None: return await update.message.reply_text("⚠️ <b>Error:</b> Amount must be a number.", parse_mode=ParseMode.HTML)
 
     target, error = await resolve_target(update, context, specific_arg=target_str)
-    
     if not target: return await update.message.reply_text(error or "⚠️ <b>Tag someone to give coins.</b>", parse_mode=ParseMode.HTML)
 
     if amount <= 0: return await update.message.reply_text("⚠️ Don't be cheeky!", parse_mode=ParseMode.HTML)
-    if sender['balance'] < amount: return await update.message.reply_text(f"📉 <b>Poor!</b> You only have <code>{format_money(sender['balance'])}</code>", parse_mode=ParseMode.HTML)
+    if sender['balance'] < amount: return await update.message.reply_text(f"📉 <b>Poor!</b> You only have {format_money(sender['balance'])}", parse_mode=ParseMode.HTML)
     if sender['user_id'] == target['user_id']: return await update.message.reply_text("🤔 Sending money to yourself?", parse_mode=ParseMode.HTML)
 
     current_tax = TAX_RATE
