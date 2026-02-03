@@ -8,7 +8,7 @@ from motor.motor_asyncio import AsyncIOMotorClient # MongoDB ke liye
 # ✅ ECONOMY & UTILS IMPORTS
 from baka.plugins.economy import get_balance, update_balance
 from baka.utils import format_money, get_mention
-from config import MONGO_DB_URI # Aapki config file se URI lega
+from baka.config import MONGO_DB_URI # Aapki config file se URI lega
 
 # ✅ DIRECT DATABASE CONNECTION (Chitta)
 db_client = AsyncIOMotorClient(MONGO_DB_URI)
