@@ -1,40 +1,112 @@
-from telegram import Update
+from telegram import Update, ChatPermissions
 from telegram.ext import ContextTypes
 
-async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+
+# ===============================
+# COMMON ADMIN CHECK
+# ===============================
+async def is_admin(update: Update):
     user = update.effective_user
     chat = update.effective_chat
 
-    # Check if admin
-    admin_check = await chat.get_member(user.id)
-    if admin_check.status not in ['creator', 'administrator']:
-        return await update.message.reply_text("❌ Sirf Admins hi kisi ko Ban kar sakte hain!")
+    member = await chat.get_member(user.id)
+    return member.status in ["creator", "administrator"]
+
+
+# ===============================
+# BAN USER
+# ===============================
+async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await is_admin(update):
+        return await update.message.reply_text("❌ Sirf Admin hi ban kar sakte hain!")
 
     if not update.message.reply_to_message:
-        return await update.message.reply_text("⚠️ Jis user ko ban karna hai, uske message pe reply karein.")
+        return await update.message.reply_text("⚠️ Reply karo user pe ban karne ke liye.")
 
     target = update.message.reply_to_message.from_user
+
     try:
-        await chat.ban_member(target.id)
-        await update.message.reply_text(f"🚀 **BOOM!** {target.first_name} ko hamesha ke liye ban kar diya gaya! ✌️")
+        await update.effective_chat.ban_member(target.id)
+        await update.message.reply_text(
+            f"🚫 {target.first_name} **BANNED FOREVER!** 💀"
+        )
     except Exception as e:
         await update.message.reply_text(f"❌ Error: {e}")
 
+
+# ===============================
+# MUTE USER
+# ===============================
 async def mute_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.effective_user
-    chat = update.effective_chat
+    if not await is_admin(update):
+        return
 
-    admin_check = await chat.get_member(user.id)
-    if admin_check.status not in ['creator', 'administrator']: return
+    if not update.message.reply_to_message:
+        return
 
-    if not update.message.reply_to_message: return
-    
     target = update.message.reply_to_message.from_user
+
     try:
-        # User ko message bhejne se rokna
-        from telegram import ChatPermissions
         permissions = ChatPermissions(can_send_messages=False)
-        await chat.restrict_member(target.id, permissions)
-        await update.message.reply_text(f"🤫 {target.first_name} ko Mute kar diya gaya hai. Ab shanti rahegi!")
+
+        await update.effective_chat.restrict_member(target.id, permissions)
+
+        await update.message.reply_text(
+            f"🤫 {target.first_name} muted ho gaya!"
+        )
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
+
+
+# ===============================
+# UNMUTE USER (🔥 FIX ADDED)
+# ===============================
+async def unmute_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await is_admin(update):
+        return
+
+    if not update.message.reply_to_message:
+        return
+
+    target = update.message.reply_to_message.from_user
+
+    try:
+        permissions = ChatPermissions(
+            can_send_messages=True,
+            can_send_media_messages=True,
+            can_send_other_messages=True,
+            can_add_web_page_previews=True
+        )
+
+        await update.effective_chat.restrict_member(target.id, permissions)
+
+        await update.message.reply_text(
+            f"✅ {target.first_name} unmuted ho gaya!"
+        )
+    except Exception as e:
+        await update.message.reply_text(f"❌ Error: {e}")
+
+
+# ===============================
+# KICK USER
+# ===============================
+async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    if not await is_admin(update):
+        return
+
+    if not update.message.reply_to_message:
+        return
+
+    target = update.message.reply_to_message.from_user
+
+    try:
+        chat = update.effective_chat
+
+        await chat.ban_member(target.id)
+        await chat.unban_member(target.id)
+
+        await update.message.reply_text(
+            f"👢 {target.first_name} kicked out!"
+        )
     except Exception as e:
         await update.message.reply_text(f"❌ Error: {e}")
