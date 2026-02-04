@@ -2,43 +2,31 @@ from telegram import Update, ChatPermissions
 from telegram.ext import ContextTypes
 
 
-# ===============================
-# COMMON ADMIN CHECK
-# ===============================
-async def is_admin(update: Update):
-    user = update.effective_user
-    chat = update.effective_chat
-
-    member = await chat.get_member(user.id)
-    return member.status in ["creator", "administrator"]
-
-
-# ===============================
-# BAN USER
-# ===============================
+# ================= BAN =================
 async def ban_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await is_admin(update):
-        return await update.message.reply_text("❌ Sirf Admin hi ban kar sakte hain!")
+    chat = update.effective_chat
+    user = update.effective_user
+
+    admin = await chat.get_member(user.id)
+    if admin.status not in ["administrator", "creator"]:
+        return await update.message.reply_text("❌ Only admins can ban.")
 
     if not update.message.reply_to_message:
-        return await update.message.reply_text("⚠️ Reply karo user pe ban karne ke liye.")
+        return await update.message.reply_text("Reply to user to ban.")
 
     target = update.message.reply_to_message.from_user
 
-    try:
-        await update.effective_chat.ban_member(target.id)
-        await update.message.reply_text(
-            f"🚫 {target.first_name} **BANNED FOREVER!** 💀"
-        )
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error: {e}")
+    await chat.ban_member(target.id)
+    await update.message.reply_text(f"🔨 {target.first_name} banned permanently.")
 
 
-# ===============================
-# MUTE USER
-# ===============================
+# ================= MUTE =================
 async def mute_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await is_admin(update):
+    chat = update.effective_chat
+    user = update.effective_user
+
+    admin = await chat.get_member(user.id)
+    if admin.status not in ["administrator", "creator"]:
         return
 
     if not update.message.reply_to_message:
@@ -46,23 +34,19 @@ async def mute_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     target = update.message.reply_to_message.from_user
 
-    try:
-        permissions = ChatPermissions(can_send_messages=False)
+    permissions = ChatPermissions(can_send_messages=False)
+    await chat.restrict_member(target.id, permissions)
 
-        await update.effective_chat.restrict_member(target.id, permissions)
-
-        await update.message.reply_text(
-            f"🤫 {target.first_name} muted ho gaya!"
-        )
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error: {e}")
+    await update.message.reply_text(f"🤫 {target.first_name} muted.")
 
 
-# ===============================
-# UNMUTE USER (🔥 FIX ADDED)
-# ===============================
+# ================= UNMUTE =================
 async def unmute_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await is_admin(update):
+    chat = update.effective_chat
+    user = update.effective_user
+
+    admin = await chat.get_member(user.id)
+    if admin.status not in ["administrator", "creator"]:
         return
 
     if not update.message.reply_to_message:
@@ -70,28 +54,26 @@ async def unmute_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     target = update.message.reply_to_message.from_user
 
-    try:
-        permissions = ChatPermissions(
-            can_send_messages=True,
-            can_send_media_messages=True,
-            can_send_other_messages=True,
-            can_add_web_page_previews=True
-        )
+    permissions = ChatPermissions(
+        can_send_messages=True,
+        can_send_media_messages=True,
+        can_send_polls=True,
+        can_send_other_messages=True,
+        can_add_web_page_previews=True
+    )
 
-        await update.effective_chat.restrict_member(target.id, permissions)
+    await chat.restrict_member(target.id, permissions)
 
-        await update.message.reply_text(
-            f"✅ {target.first_name} unmuted ho gaya!"
-        )
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error: {e}")
+    await update.message.reply_text(f"✅ {target.first_name} unmuted.")
 
 
-# ===============================
-# KICK USER
-# ===============================
+# ================= KICK =================
 async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    if not await is_admin(update):
+    chat = update.effective_chat
+    user = update.effective_user
+
+    admin = await chat.get_member(user.id)
+    if admin.status not in ["administrator", "creator"]:
         return
 
     if not update.message.reply_to_message:
@@ -99,14 +81,8 @@ async def kick_user(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     target = update.message.reply_to_message.from_user
 
-    try:
-        chat = update.effective_chat
+    # kick = ban + unban instantly
+    await chat.ban_member(target.id)
+    await chat.unban_member(target.id)
 
-        await chat.ban_member(target.id)
-        await chat.unban_member(target.id)
-
-        await update.message.reply_text(
-            f"👢 {target.first_name} kicked out!"
-        )
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error: {e}")
+    await update.message.reply_text(f"👢 {target.first_name} kicked from group.")
