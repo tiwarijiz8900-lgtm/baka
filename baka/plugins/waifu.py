@@ -8,7 +8,13 @@ from telegram.constants import ParseMode
 from baka.utils import ensure_user_exists, resolve_target, get_mention, stylize_text, format_money
 from baka.database import users_collection
 from baka.config import WAIFU_PROPOSE_COST
-from baka.plugins.groq_ai import ask_groq   # ✅ Groq added
+
+# ✅ SAFE GROQ IMPORT (NO CRASH EVER)
+try:
+    from baka.plugins.chatbot import ask_groq
+except:
+    ask_groq = None
+
 
 API_URL = "https://api.waifu.pics"
 
@@ -32,7 +38,7 @@ async def waifu_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
 
     try:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.get(f"{API_URL}/sfw/{cmd}")
             url = resp.json()['url']
     except:
@@ -42,8 +48,11 @@ async def waifu_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
     t_link = get_mention(target) if target else "the air"
 
     caption = f"{s_link} {cmd}s {t_link}!"
+
+    # ✅ DEAD instead of murdered
     if cmd == "kill":
-        caption = f"{s_link} murdered {t_link} 💀"
+        caption = f"💀 {s_link} made {t_link} DEAD!"
+
     if cmd == "kiss":
         caption = f"{s_link} kissed {t_link} 💋"
 
@@ -55,7 +64,7 @@ async def waifu_action(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # =================================
-# PROPOSE (Groq AI roast added)
+# PROPOSE (SAFE GROQ ROAST)
 # =================================
 async def wpropose(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = ensure_user_exists(update.effective_user)
@@ -74,7 +83,7 @@ async def wpropose(update: Update, context: ContextTypes.DEFAULT_TYPE):
     success = random.random() < 0.3
 
     if success:
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=10) as client:
             r = await client.get("https://api.waifu.im/search?tags=waifu")
             img_url = r.json()['images'][0]['url']
 
@@ -96,9 +105,14 @@ async def wpropose(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     else:
-        # 🔥 Groq roast
-        prompt = "Savage roast in Hinglish for a boy rejected by anime girl."
-        roast = await ask_groq(prompt)
+        roast = "Rejected bro 😭"
+
+        # ✅ Groq only if available
+        if ask_groq:
+            try:
+                roast = await ask_groq("Savage roast in Hinglish for anime rejection")
+            except:
+                pass
 
         await update.message.reply_animation(
             "https://media.giphy.com/media/pSpmPXdHQWZrcuJRq3/giphy.gif",
@@ -120,7 +134,7 @@ async def wmarry(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode=ParseMode.HTML
         )
 
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=10) as client:
         r = await client.get("https://api.waifu.pics/sfw/waifu")
         url = r.json()['url']
 
@@ -142,4 +156,4 @@ async def wmarry(update: Update, context: ContextTypes.DEFAULT_TYPE):
         url,
         caption="💍 <b>Married!</b>\nAdded <b>Rare Waifu</b> to collection.",
         parse_mode=ParseMode.HTML
-        )
+    )
