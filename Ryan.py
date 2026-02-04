@@ -1,4 +1,3 @@
-import os
 import logging
 from threading import Thread
 from flask import Flask
@@ -14,7 +13,7 @@ logging.basicConfig(level=logging.INFO)
 # ---------------- CONFIG ----------------
 from baka.config import TOKEN, PORT, BOT_NAME
 
-# ---------------- PLUGINS (ALL IMPORTED) ----------------
+# ---------------- PLUGINS ----------------
 from baka.plugins import (
     admin,
     ai_media,
@@ -86,7 +85,9 @@ if __name__ == "__main__":
     # ================= CORE =================
     bot.add_handler(CommandHandler("start", start.start))
     bot.add_handler(CommandHandler("ping", ping.ping))
-    bot.add_handler(CommandHandler("welcome", welcome.welcome_cmd))
+
+    # ✅ FIXED HERE (important)
+    bot.add_handler(CommandHandler("welcome", welcome.welcome_command))
 
     # ================= ADMIN =================
     bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
@@ -109,7 +110,7 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler("jealous", jealous.jealous_toggle))
     bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
 
-    # ================= GAMES & FUN =================
+    # ================= GAMES =================
     bot.add_handler(CommandHandler("game", game.game_cmd))
     bot.add_handler(CommandHandler("mafia", mafia.mafia_game))
     bot.add_handler(CommandHandler("riddle", riddle.riddle_cmd))
@@ -120,7 +121,7 @@ if __name__ == "__main__":
 
     # ================= ECONOMY =================
     bot.add_handler(CommandHandler("shop", shop.shop_cmd))
-    bot.add_handler(CommandHandler("balance", economy.balance_cmd))
+    bot.add_handler(CommandHandler("balance", economy.balance))
     bot.add_handler(CommandHandler("collect", collection.collect_cmd))
 
     # ================= AI & MEDIA =================
