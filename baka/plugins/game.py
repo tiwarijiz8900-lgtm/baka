@@ -96,7 +96,7 @@ async def kill(update: Update, context: ContextTypes.DEFAULT_TYPE):
     narration = await get_narrative("kill", get_mention(attacker), get_mention(target))
 
     await update.message.reply_text(
-        f"🔪 <b>MURDER!</b>\n\n
+        f"🔪 <b>MURDER!</b>\n\n"
 mplementation error?}
 📝 <i>{narration}</i>\n\n💵 Loot: <code>{format_money(final_reward)}</code>",
         parse_mode=ParseMode.HTML
