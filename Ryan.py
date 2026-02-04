@@ -45,7 +45,7 @@ from baka.plugins import (
     waifu,
     welcome,
     wishes,
-    nsfw   # ✅ ADDED
+    antinfw   # ✅ ADDED
 )
 
 # ---------------- KEEP ALIVE SERVER ----------------
