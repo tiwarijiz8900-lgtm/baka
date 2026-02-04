@@ -44,7 +44,8 @@ from baka.plugins import (
     start,
     waifu,
     welcome,
-    wishes
+    wishes,
+    nsfw   # ✅ ADDED
 )
 
 # ---------------- KEEP ALIVE SERVER ----------------
@@ -66,6 +67,7 @@ async def post_init(application):
         ("premium", "Premium Plans"),
         ("marry", "Propose"),
         ("match", "Love Match"),
+        ("nsfw", "NSFW On/Off")  # ✅ ADDED
     ])
 
 
@@ -85,21 +87,27 @@ if __name__ == "__main__":
     # ================= CORE =================
     bot.add_handler(CommandHandler("start", start.start))
     bot.add_handler(CommandHandler("ping", ping.ping))
-
-    # ✅ FIXED HERE (important)
     bot.add_handler(CommandHandler("welcome", welcome.welcome_command))
+
 
     # ================= ADMIN =================
     bot.add_handler(CommandHandler("broadcast", broadcast.broadcast))
     bot.add_handler(CommandHandler("ban", moderation.ban_user))
     bot.add_handler(CommandHandler("mute", moderation.mute_user))
     bot.add_handler(CommandHandler("unmute", moderation.unmute_user))
+    bot.add_handler(CommandHandler("kick", moderation.kick_user))  # ✅ ADDED
     bot.add_handler(CommandHandler("admin", admin.admin_panel))
+
+
+    # ================= NSFW CONTROL =================
+    bot.add_handler(CommandHandler("nsfw", nsfw.toggle_nsfw))  # ✅ ADDED
+
 
     # ================= PREMIUM =================
     bot.add_handler(CommandHandler("premium", premium.premium_plans))
     bot.add_handler(CommandHandler("myplan", premium.check_plan))
     bot.add_handler(CommandHandler("approve", premium.approve_user))
+
 
     # ================= SOCIAL =================
     bot.add_handler(CommandHandler("marry", marriage.marry))
@@ -110,6 +118,7 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler("jealous", jealous.jealous_toggle))
     bot.add_handler(CommandHandler("breakup", breakup.breakup_toggle))
 
+
     # ================= GAMES =================
     bot.add_handler(CommandHandler("game", game.game_cmd))
     bot.add_handler(CommandHandler("mafia", mafia.mafia_game))
@@ -119,18 +128,37 @@ if __name__ == "__main__":
     bot.add_handler(CommandHandler("battle", couple_battle.start_battle))
     bot.add_handler(CommandHandler("couplegame", couple_games.start_game))
 
+
     # ================= ECONOMY =================
     bot.add_handler(CommandHandler("shop", shop.shop_cmd))
     bot.add_handler(CommandHandler("balance", economy.balance))
     bot.add_handler(CommandHandler("collect", collection.collect_cmd))
 
+
     # ================= AI & MEDIA =================
     bot.add_handler(MessageHandler(filters.PHOTO, ai_media.ai_media_handler))
+
+
+    # ================= SECURITY (EARLY GROUP) =================
+    bot.add_handler(MessageHandler(filters.Entity("url"), antispam.link_guard), group=1)
+
+    # ✅ NSFW media delete (photo/video/gif/sticker)
+    bot.add_handler(
+        MessageHandler(
+            filters.PHOTO |
+            filters.VIDEO |
+            filters.ANIMATION |
+            filters.Sticker.ALL,
+            nsfw.delete_nsfw_content
+        ),
+        group=2
+    )
+
+
+    # ================= CHATBOT =================
     bot.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, wishes.wish_handler), group=3)
     bot.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, chatbot.ai_message_handler), group=4)
 
-    # ================= SECURITY =================
-    bot.add_handler(MessageHandler(filters.Entity("url"), antispam.link_guard), group=1)
 
     print(f"🚀 {BOT_NAME} started successfully...")
     bot.run_polling(drop_pending_updates=True)
